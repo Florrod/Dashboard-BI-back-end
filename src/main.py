@@ -8,7 +8,7 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, User
+from models import db, Enterprise
 from create_database import init_database
 #from models import Person
 
@@ -32,7 +32,7 @@ def handle_invalid_usage(error):
 def sitemap():
     return generate_sitemap(app)
 
-@app.route('/user', methods=['GET'])
+@app.route('/enterprise', methods=['GET'])
 def handle_hello():
 
     response_body = {
