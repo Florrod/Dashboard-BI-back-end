@@ -22,8 +22,10 @@ db.init_app(app)
 CORS(app)
 setup_admin(app)
 
+new_enterprise = Enterprise(CIF_number="", name="", address="",phone="",email="")
+
+
 # jackson_family = FamilyStructure("Jackson")
-new_enterprise = Enterprise(CIF_number=)
 
 # Handle/serialize errors like a JSON object
 @app.errorhandler(APIException)
@@ -47,7 +49,9 @@ def handle_hello():
 @app.route('/enterprise', methods=['POST'])
 def add_enterprise():
     requests_body = json.loads(request.data)
-    member_to_add = Enterprise.add_enterprise(requests_body)
+    member_to_add = new_enterprise.add_enterprise(requests_body)
+    db.session.add(new_enterprise)
+    db.session.commit()
     return jsonify(requests_body), 200
 
 # @app.route('/enterprise', methods=['POST'])

@@ -21,7 +21,7 @@ class Enterprise(db.Model):
         self.address = address,
         self.phone = phone,
         self.email = email
-        
+
     def __repr__(self):
         return '<Enterprise %r>' % self.name
     def serialize(self):
@@ -101,10 +101,9 @@ class Midata(db.Model):
             # ¿hay que meter las relaciones?
         }
 
-    def _generateId(self):
-        return randint(0, 99999999)
+def _generateId(self):
+    return randint(0, 99999999)
 
-    def add_enterprise(self, enterprise):
-        self.Enterprise.append(enterprise)
-        # fill this method and update the return
-        return None
+def add_enterprise(self, enterprise):
+    new_enterprise = Enterprise(CIF_number="", name="", address="",phone="",email="")
+    db.session.add(new_enterprise)
