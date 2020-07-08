@@ -52,6 +52,20 @@ def delete_single_enterprise(id):
     db.session.commit()
     return jsonify(single_enterprise.serialize()),200
 
+@app.route('/enterprise', methods=['PUT'])
+def update_enterprise():
+    body = request.get_json()
+    update_single_enterprise =Enterprise.query.filter_by(id=body['id']).first_or_404()
+    update_single_enterprise.CIF_number = body['CIF_number']
+    update_single_enterprise.name = body['name']
+    update_single_enterprise.address = body['address']
+    update_single_enterprise.phone = body['phone']
+    update_single_enterprise.email = body['email']
+    update_single_enterprise.is_active = body['is_active']
+    db.session.commit()
+    return jsonify(update_single_enterprise.serialize()),200
+
+
 
 @app.route('/enterprise', methods=['POST'])
 def add_enterprise():
