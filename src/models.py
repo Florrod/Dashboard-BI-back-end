@@ -8,7 +8,7 @@ class Enterprise(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     CIF_number = db.Column(db.String(10), unique=True, nullable=True)
     name = db.Column(db.String(120), unique=True, nullable=True)
-    password = db.Column(db.String(120), nullable=True)
+    password = db.Column(db.String(120), nullable=True) #preguntar como encriptar contraseña a la hora de crearla
     address = db.Column(db.String(120),nullable=True)
     phone = db.Column(db.String(80),nullable=True)
     email = db.Column(db.String(120), unique=True, nullable=True)
