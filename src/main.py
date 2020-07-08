@@ -24,8 +24,6 @@ setup_admin(app)
 
 
 
-# jackson_family = FamilyStructure("Jackson")
-
 # Handle/serialize errors like a JSON object
 @app.errorhandler(APIException)
 def handle_invalid_usage(error):
@@ -37,13 +35,16 @@ def sitemap():
     return generate_sitemap(app)
 
 @app.route('/enterprise', methods=['GET'])
-def handle_hello():
+def get_all_enterprises():
+    all_enterprises = Enterprise.query.all()
+    enterprises = list(map(lambda enterprise: enterprise.serialize(), all_enterprises))
+    return jsonify(enterprises),200
 
-    response_body = {
-        "msg": "Hello, this is your GET /user response "
-    }
+@app.route('/enterprise/<int:id>', methods=['GET'])
+def get_single_enterprise(id):
+    single_enterprise =Enterprise.query.filter_by(id=id).first_or_404()
+    return jsonify(single_enterprise.serialize()),200
 
-    return jsonify(response_body), 200
 
 @app.route('/enterprise', methods=['POST'])
 def add_enterprise():

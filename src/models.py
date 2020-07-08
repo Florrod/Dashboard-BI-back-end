@@ -103,6 +103,3 @@ class Midata(db.Model):
             "detail": self.detail,
             # ¿hay que meter las relaciones?
         }
-
-# def _generateId(self):
-#     return randint(0, 99999999)
