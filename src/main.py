@@ -45,6 +45,13 @@ def get_single_enterprise(id):
     single_enterprise =Enterprise.query.filter_by(id=id).first_or_404()
     return jsonify(single_enterprise.serialize()),200
 
+@app.route('/enterprise/<int:id>', methods=['DELETE'])
+def delete_single_enterprise(id):
+    single_enterprise =Enterprise.query.filter_by(id=id).first_or_404()
+    db.session.delete(single_enterprise)
+    db.session.commit()
+    return jsonify(single_enterprise.serialize()),200
+
 
 @app.route('/enterprise', methods=['POST'])
 def add_enterprise():
@@ -67,26 +74,6 @@ def add_enterprise():
     return jsonify(new_enterprise.serialize()), 200
 
 
-# @app.route('/enterprise', methods=['POST'])
-# def handle_person():
-
-#     # First we get the payload json
-#     body = request.get_json()
-
-#     if body is None:
-#         raise APIException("You need to specify the request body as a json object", status_code=400)
-#     if '' not in body:
-#         raise APIException('You need to specify the username', status_code=400)
-#     if 'email' not in body:
-#         raise APIException('You need to specify the email', status_code=400)
-
-#     # at this point, all data has been validated, we can proceed to inster into the bd
-#     user1 = Person(username=body['username'], email=body['email'])
-#     db.session.add(user1)
-#     db.session.commit()
-#     return "ok", 200
-
-# this only runs if `$ python src/main.py` is executed
 if __name__ == '__main__':
     PORT = int(os.environ.get('PORT', 3000))
     app.run(host='0.0.0.0', port=PORT, debug=False)
