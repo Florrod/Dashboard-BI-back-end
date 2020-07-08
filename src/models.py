@@ -47,6 +47,11 @@ class Brand(db.Model):
     enterprise_to_id = db.Column(db.Integer, db.ForeignKey('enterprise.id')) #¿Esto está bien?
     # relation_brand= relationship('Integration')
     relation_integration = db.relationship('Integration', lazy=True)
+
+    def __init__(self, name, logo):
+        self.name = name
+        self.logo = logo
+
     def __ref__(self):
         return f'<Brand {self.name}>'
     def serialize(self):
@@ -54,7 +59,6 @@ class Brand(db.Model):
             "id": self.id,
             "name": self.name,
             "logo": self.logo,
-            "address": self.address,
             "relation_integration": list(map(lambda x: x.serialize(), self.relation_integration))
         }
 

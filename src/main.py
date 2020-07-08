@@ -8,7 +8,7 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, Enterprise
+from models import db, Enterprise, Brand
 from create_database import init_database
 #from models import Person
 
@@ -33,6 +33,8 @@ def handle_invalid_usage(error):
 @app.route('/')
 def sitemap():
     return generate_sitemap(app)
+
+#METODOS PARA ENTERPRISE
 
 @app.route('/enterprise', methods=['GET'])
 def get_all_enterprises():
@@ -65,8 +67,6 @@ def update_enterprise():
     db.session.commit()
     return jsonify(update_single_enterprise.serialize()),200
 
-
-
 @app.route('/enterprise', methods=['POST'])
 def add_enterprise():
     body = request.get_json()
@@ -87,6 +87,23 @@ def add_enterprise():
     db.session.commit()
     return jsonify(new_enterprise.serialize()), 200
 
+#METODOS PARA BRAND
+
+@app.route('/enterprise/brand', methods=['GET'])
+def get_all_brand():
+    all_brand = Brand.query.all()
+    brands = list(map(lambda brand: brand.serialize(), all_brand))
+    return jsonify(brands),200
+
+@app.route('/enterprise/<brand', methods=['POST'])
+def add_brand():
+    body = request.get_json()
+    if 'name' not in body:
+        return 'please specify the name of the company', 400
+    new_brand = Brand(name=body['name'], logo=body['logo'])
+    db.session.add(new_brand)
+    db.session.commit()
+    return jsonify(new_brand.serialize()), 200
 
 if __name__ == '__main__':
     PORT = int(os.environ.get('PORT', 3000))
