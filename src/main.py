@@ -22,7 +22,6 @@ db.init_app(app)
 CORS(app)
 setup_admin(app)
 
-new_enterprise = Enterprise(CIF_number="", name="", address="",phone="",email="")
 
 
 # jackson_family = FamilyStructure("Jackson")
@@ -48,15 +47,24 @@ def handle_hello():
 
 @app.route('/enterprise', methods=['POST'])
 def add_enterprise():
-    new_CIF_number = request.form["CIF_number"]
-    new_name = request.form["name"]
-    new_address = request.form["address"]
-    new_phone = request.form["phone"]
-    new_email = request.form["email"]
-    new_enterprise = Enterprise(new_CIF_number,new_name,new_address,new_phone,new_email)
+    body = request.get_json()
+    if 'CIF_number' not in body:
+        return 'please specify CIF_number',400
+    if 'name' not in body:
+        return 'please specify the name of the company', 400
+    if 'address' not in body:
+        return 'please specify the address of the company', 400
+    if 'phone' not in body:
+        return 'please specify the phone of the company', 400
+    if 'email' not in body:
+        return 'please specify the email of the company', 400
+    if 'is_active' not in body:
+        return 'please specify the email of the company', 400
+    new_enterprise = Enterprise(CIF_number=body['CIF_number'], name=body['name'], address=body['address'], phone=body['phone'], email=body['email'], is_active=body['is_active'])
     db.session.add(new_enterprise)
     db.session.commit()
-    return json.dumps({'success':True}), 201, {'ContentType':'application/json'}
+    return jsonify(new_enterprise.serialize()), 200
+
 
 # @app.route('/enterprise', methods=['POST'])
 # def handle_person():

@@ -14,24 +14,27 @@ class Enterprise(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=True)
     # relation_brand = relationship('Brand')
     relation_brand = db.relationship("Brand", lazy=True)
-    is_active = db.Column(db.Boolean(), unique=False, nullable=False)
-    def __init__(self, CIF_number, name, address, phone, email):
-        self.CIF_number = CIF_number,
-        self.name = name,
-        self.address = address,
-        self.phone = phone,
+    is_active = db.Column(db.Boolean, unique=False, nullable=False)
+
+    def __init__(self, CIF_number, name, address, phone, email, is_active):
+        self.CIF_number = CIF_number
+        self.name = name
+        self.address = address
+        self.phone = phone
         self.email = email
+        self.is_active = is_active
 
     def __repr__(self):
         return '<Enterprise %r>' % self.name
     def serialize(self):
         return {
-            "id": self._generateId(),
+            "id": self.id,
             "CIF_number": self.CIF_number,
             "name": self.name,
             "address": self.address,
             "phone": self.phone,
             "email": self.email,
+            "is_active": self.is_active,
             # linea nueva insertada debajo !
             "relation_brand": list(map(lambda x: x.serialize(), self.relation_brand))
             # do not serialize the password, its a security breach
@@ -48,7 +51,7 @@ class Brand(db.Model):
         return f'<Brand {self.name}>'
     def serialize(self):
         return {
-            "id": self._generateId(),
+            "id": self.id,
             "name": self.name,
             "logo": self.logo,
             "address": self.address,
@@ -66,7 +69,7 @@ class Integration(db.Model):
         return f'<Integration {self.id}>'
     def serialize(self):
         return {
-            "id": self._generateId(),
+            "id": self.id,
             "API_key": self.API_key,
             "deleted": self.deleted,
             "relation_data": list(map(lambda x: x.serialize(), self.relation_data))
@@ -81,7 +84,7 @@ class Platform(db.Model):
         return f'<Platform {self.name}>'
     def serialize(self):
         return {
-            "id": self._generateId(),
+            "id": self.id,
             "name": self.name,
             "relation_integration": list(map(lambda x: x.serialize(), self.relation_integration))
             # ¿hay que meter las relaciones?
@@ -96,14 +99,10 @@ class Midata(db.Model):
         return f'<Midata {self.id}>'
     def serialize(self):
         return {
-            "id": self._generateId(),
+            "id": self.id,
             "detail": self.detail,
             # ¿hay que meter las relaciones?
         }
 
-def _generateId(self):
-    return randint(0, 99999999)
-
-def add_enterprise(self, enterprise):
-    new_enterprise = Enterprise(CIF_number="", name="", address="",phone="",email="")
-    db.session.add(new_enterprise)
+# def _generateId(self):
+#     return randint(0, 99999999)
