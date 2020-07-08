@@ -48,11 +48,15 @@ def handle_hello():
 
 @app.route('/enterprise', methods=['POST'])
 def add_enterprise():
-    requests_body = json.loads(request.data)
-    member_to_add = new_enterprise.add_enterprise(requests_body)
+    new_CIF_number = request.form["CIF_number"]
+    new_name = request.form["name"]
+    new_address = request.form["address"]
+    new_phone = request.form["phone"]
+    new_email = request.form["email"]
+    new_enterprise = Enterprise(new_CIF_number,new_name,new_address,new_phone,new_email)
     db.session.add(new_enterprise)
     db.session.commit()
-    return jsonify(requests_body), 200
+    return json.dumps({'success':True}), 201, {'ContentType':'application/json'}
 
 # @app.route('/enterprise', methods=['POST'])
 # def handle_person():
