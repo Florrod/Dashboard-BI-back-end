@@ -95,7 +95,12 @@ def get_all_brand():
     brands = list(map(lambda brand: brand.serialize(), all_brand))
     return jsonify(brands),200
 
-@app.route('/enterprise/<brand', methods=['POST'])
+@app.route('/enterprise/brand/<int:id>', methods=['GET'])
+def get_single_brand(id):
+    single_brand =Brand.query.filter_by(id=id).first_or_404()
+    return jsonify(single_brand.serialize()),200
+
+@app.route('/enterprise/brand', methods=['POST'])
 def add_brand():
     body = request.get_json()
     if 'name' not in body:
