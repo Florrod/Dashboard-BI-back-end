@@ -60,6 +60,7 @@ def update_enterprise():
     update_single_enterprise =Enterprise.query.filter_by(id=body['id']).first_or_404()
     update_single_enterprise.CIF_number = body['CIF_number']
     update_single_enterprise.name = body['name']
+    update_single_enterprise.password = body['password']
     update_single_enterprise.address = body['address']
     update_single_enterprise.phone = body['phone']
     update_single_enterprise.email = body['email']
@@ -74,6 +75,8 @@ def add_enterprise():
         return 'please specify CIF_number',400
     if 'name' not in body:
         return 'please specify the name of the company', 400
+    if 'password' not in body:
+        return 'please specify your password', 400
     if 'address' not in body:
         return 'please specify the address of the company', 400
     if 'phone' not in body:
@@ -82,15 +85,15 @@ def add_enterprise():
         return 'please specify the email of the company', 400
     if 'is_active' not in body:
         return 'please specify the email of the company', 400
-    new_enterprise = Enterprise(CIF_number=body['CIF_number'], name=body['name'], address=body['address'], phone=body['phone'], email=body['email'], is_active=body['is_active'])
+    new_enterprise = Enterprise(CIF_number=body['CIF_number'], name=body['name'], password=body['password'], address=body['address'], phone=body['phone'], email=body['email'], is_active=body['is_active'])
     db.session.add(new_enterprise)
     db.session.commit()
     return jsonify(new_enterprise.serialize()), 200
 
 #METODOS PARA BRAND
 
-@app.route('/enterprise/brand', methods=['GET'])
-def get_all_brand():
+@app.route('/enterprise/<int:enterprise_id>/brand', methods=['GET'])
+def get_all_brand(enterprise_id):
     all_brand = Brand.query.all()
     brands = list(map(lambda brand: brand.serialize(), all_brand))
     return jsonify(brands),200
@@ -100,8 +103,8 @@ def get_single_brand(id):
     single_brand =Brand.query.filter_by(id=id).first_or_404()
     return jsonify(single_brand.serialize()),200
 
-@app.route('/enterprise/brand', methods=['POST'])
-def add_brand():
+@app.route('/enterprise/<int:enterprise_id>/brand', methods=['POST'])
+def add_brand(enterprise_id):
     body = request.get_json()
     if 'name' not in body:
         return 'please specify the name of the company', 400
@@ -109,6 +112,15 @@ def add_brand():
     db.session.add(new_brand)
     db.session.commit()
     return jsonify(new_brand.serialize()), 200
+
+@app.route('/enterprise/<int:enterprise_id>/brand/<int:brand_id>', methods=['PUT'])
+def update_brand(enterprise_id,brand_id):
+    body = request.get_json()
+    update_single_brand =Brand.query.filter_by(id=body['id']).first_or_404()
+    update_single_brand.name = body['name']
+    update_single_brand.logo = body['logo']
+    db.session.commit()
+    return jsonify(update_single_brand.serialize()),200
 
 if __name__ == '__main__':
     PORT = int(os.environ.get('PORT', 3000))

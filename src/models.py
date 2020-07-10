@@ -16,9 +16,10 @@ class Enterprise(db.Model):
     relation_brand = db.relationship("Brand", lazy=True)
     is_active = db.Column(db.Boolean, unique=False, nullable=False)
 
-    def __init__(self, CIF_number, name, address, phone, email, is_active):
+    def __init__(self, CIF_number, name, password, address, phone, email, is_active):
         self.CIF_number = CIF_number
         self.name = name
+        self.password = password
         self.address = address
         self.phone = phone
         self.email = email
@@ -47,6 +48,7 @@ class Brand(db.Model):
     enterprise_to_id = db.Column(db.Integer, db.ForeignKey('enterprise.id')) #¿Esto está bien?
     # relation_brand= relationship('Integration')
     relation_integration = db.relationship('Integration', lazy=True)
+    
 
     def __init__(self, name, logo):
         self.name = name
