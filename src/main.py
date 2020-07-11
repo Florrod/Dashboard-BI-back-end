@@ -54,8 +54,8 @@ def delete_single_enterprise(id):
     db.session.commit()
     return jsonify(single_enterprise.serialize()),200
 
-@app.route('/enterprise', methods=['PUT'])
-def update_enterprise():
+@app.route('/enterprise/<int:id>', methods=['PUT'])
+def update_enterprise(id):
     body = request.get_json()
     update_single_enterprise =Enterprise.query.filter_by(id=body['id']).first_or_404()
     update_single_enterprise.CIF_number = body['CIF_number']
@@ -113,8 +113,8 @@ def add_brand():
     db.session.commit()
     return jsonify(new_brand.serialize()), 200
 
-@app.route('/enterprise/brand/<int:id>', methods=['PUT'])
-def update_brand():
+@app.route('/enterprise/brand/<int:brand_id>', methods=['PUT'])
+def update_brand(brand_id):
     body = request.get_json()
     update_single_brand =Brand.query.filter_by(id=body['id']).first_or_404()
     update_single_brand.name = body['name']
