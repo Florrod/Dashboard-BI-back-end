@@ -82,9 +82,9 @@ def add_enterprise():
     if 'phone' not in body:
         return 'please specify the phone of the company', 400
     if 'email' not in body:
-        return 'please specify the email of the company', 400
+         return 'please specify the email of the company', 400
     if 'is_active' not in body:
-        return 'please specify the email of the company', 400
+        return 'please specify the status of the company', 400
     new_enterprise = Enterprise(CIF_number=body['CIF_number'], name=body['name'], password=body['password'], address=body['address'], phone=body['phone'], email=body['email'], is_active=body['is_active'])
     db.session.add(new_enterprise)
     db.session.commit()
@@ -92,7 +92,7 @@ def add_enterprise():
 
 #METODOS PARA BRAND
 
-@app.route('/enterprise/<int:enterprise_id>/brand', methods=['GET'])
+@app.route('/enterprise/brand', methods=['GET'])
 def get_all_brand(enterprise_id):
     all_brand = Brand.query.all()
     brands = list(map(lambda brand: brand.serialize(), all_brand))
@@ -103,7 +103,7 @@ def get_single_brand(id):
     single_brand =Brand.query.filter_by(id=id).first_or_404()
     return jsonify(single_brand.serialize()),200
 
-@app.route('/enterprise/<int:enterprise_id>/brand', methods=['POST'])
+@app.route('/enterprise/brand', methods=['POST'])
 def add_brand(enterprise_id):
     body = request.get_json()
     if 'name' not in body:
@@ -113,7 +113,7 @@ def add_brand(enterprise_id):
     db.session.commit()
     return jsonify(new_brand.serialize()), 200
 
-@app.route('/enterprise/<int:enterprise_id>/brand/<int:brand_id>', methods=['PUT'])
+@app.route('/enterprise/brand/<int:brand_id>', methods=['PUT'])
 def update_brand(enterprise_id,brand_id):
     body = request.get_json()
     update_single_brand =Brand.query.filter_by(id=body['id']).first_or_404()
@@ -121,6 +121,15 @@ def update_brand(enterprise_id,brand_id):
     update_single_brand.logo = body['logo']
     db.session.commit()
     return jsonify(update_single_brand.serialize()),200
+
+@app.route('/enterprise/brand/<int:brand_id>', methods=['DELETE'])
+def delete_single_brand(enterprise_id,brand_id):
+    single_brand =Brand.query.filter_by(id=id).first_or_404()
+    db.session.delete(single_brand)
+    db.session.commit()
+    return jsonify(single_brand.serialize()),200
+
+#METODOS PARA INTEGRATION
 
 if __name__ == '__main__':
     PORT = int(os.environ.get('PORT', 3000))
