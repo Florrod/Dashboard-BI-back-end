@@ -93,7 +93,7 @@ def add_enterprise():
 #METODOS PARA BRAND
 
 @app.route('/enterprise/brand', methods=['GET'])
-def get_all_brand(enterprise_id):
+def get_all_brand():
     all_brand = Brand.query.all()
     brands = list(map(lambda brand: brand.serialize(), all_brand))
     return jsonify(brands),200
@@ -104,7 +104,7 @@ def get_single_brand(id):
     return jsonify(single_brand.serialize()),200
 
 @app.route('/enterprise/brand', methods=['POST'])
-def add_brand(enterprise_id):
+def add_brand():
     body = request.get_json()
     if 'name' not in body:
         return 'please specify the name of the company', 400
@@ -113,8 +113,8 @@ def add_brand(enterprise_id):
     db.session.commit()
     return jsonify(new_brand.serialize()), 200
 
-@app.route('/enterprise/brand/<int:brand_id>', methods=['PUT'])
-def update_brand(enterprise_id,brand_id):
+@app.route('/enterprise/brand/<int:id>', methods=['PUT'])
+def update_brand():
     body = request.get_json()
     update_single_brand =Brand.query.filter_by(id=body['id']).first_or_404()
     update_single_brand.name = body['name']
@@ -122,8 +122,8 @@ def update_brand(enterprise_id,brand_id):
     db.session.commit()
     return jsonify(update_single_brand.serialize()),200
 
-@app.route('/enterprise/brand/<int:brand_id>', methods=['DELETE'])
-def delete_single_brand(enterprise_id,brand_id):
+@app.route('/enterprise/brand/<int:id>', methods=['DELETE'])
+def delete_single_brand(id):
     single_brand =Brand.query.filter_by(id=id).first_or_404()
     db.session.delete(single_brand)
     db.session.commit()
