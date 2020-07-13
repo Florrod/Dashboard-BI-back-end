@@ -8,7 +8,7 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, Enterprise, Brand, Integration
+from models import db, Enterprise, Brand, Integration, Mydata
 from create_database import init_database
 #from models import Person
 
@@ -163,6 +163,33 @@ def update_integration(id):
     update_single_integration.brand_to_id = body['brand_to_id']
     db.session.commit()
     return jsonify(update_single_integration.serialize()),200
+
+#METODOS PARA MYDATA
+
+@app.route('/enterprise/brand/mydata', methods=['GET'])
+def get_all_mydata():
+    all_mydata = Mydata.query.all()
+    mydatas = list(map(lambda data: data.serialize(), all_mydata))
+    return jsonify(mydatas),200
+
+@app.route('/enterprise/brand/mydata/<int:id>', methods=['GET'])
+def get_single_mydata(id):
+    single_data = Mydata.query.filter_by(id=id).first_or_404()
+    return jsonify(single_data.serialize()),200
+
+@app.route('/enterprise/brand/mydata', methods=['POST'])
+def add_mydata():
+    body = request.get_json()
+    if 'detail' not in body:
+        return 'please specify the detail', 400
+    if 'brand_to_id' not in body:
+        return 'please specify the brand', 400
+    if 'integration_to_id' not in body:
+        return 'please specify the Integration', 400
+    new_mydata = Mydata(detail=body['detail'], brand_to_id=body['brand_to_id'], integration_to_id=body['integration_to_id'])
+    db.session.add(new_mydata)
+    db.session.commit()
+    return jsonify(new_mydata.serialize()), 200
 
 if __name__ == '__main__':
     PORT = int(os.environ.get('PORT', 3000))

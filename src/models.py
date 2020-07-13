@@ -49,6 +49,7 @@ class Brand(db.Model):
     logo= db.Column(db.String(120), nullable=True)
     enterprise_to_id = db.Column(db.Integer, db.ForeignKey('enterprise.id'), nullable=False)
     relation_integration = db.relationship('Integration', backref='brand', lazy=True)
+    relation_mi_data = db.relationship('Mydata', backref='brand', lazy=True)
 
     # def __init__(self, name, logo):
     #     self.name = name
@@ -63,6 +64,7 @@ class Brand(db.Model):
             "name": self.name,
             "logo": self.logo,
             "relation_integration": list(map(lambda x: x.serialize(), self.relation_integration)),
+            "relation_mi_data": list(map(lambda x: x.serialize(), self.relation_mi_data)),
         }
     # def save(self):
     #     db.session.add(self)
@@ -75,7 +77,7 @@ class Integration(db.Model):
     # deleted = db.Column(db.Boolean(), default=False) #¿Esto está bien? hay que incluirlo en serialize y cómo
     # platform_id = db.Column(db.Integer, db.ForeignKey('platform.id'), nullable=False)
     brand_to_id = db.Column(db.Integer, db.ForeignKey('brand.id'), nullable=False)
-    # relation_data = db.relationship("Midata", backref='integration', lazy=True)
+    # relation_data = db.relationship("Mydata", backref='integration', lazy=True)
     
     # def __ref__(self):
     #     return f'<Integration {self.id}>'
@@ -105,17 +107,17 @@ class Integration(db.Model):
 #             # ¿hay que meter las relaciones?
 #         }  
 
-# class Midata(db.Model):
-#     id= db.Column(db.Integer, primary_key=True)
-#     detail = db.Column(db.String(250))
-#     brand_to_id = db.Column(db.Integer, db.ForeignKey('brand.id'), nullable=False)
-#     integration_to_id = db.Column(db.Integer, db.ForeignKey('integration.id'), nullable=False)
+class Mydata(db.Model):
+    id= db.Column(db.Integer, primary_key=True)
+    detail = db.Column(db.String(250))
+    brand_to_id = db.Column(db.Integer, db.ForeignKey('brand.id'), nullable=False)
+    integration_to_id = db.Column(db.Integer, db.ForeignKey('integration.id'), nullable=False)
 
-#     def __ref__(self):
-#         return f'<Midata {self.id}>'
-#     def serialize(self):
-#         return {
-#             "id": self.id,
-#             "detail": self.detail,
-#             # ¿hay que meter las relaciones?
-#         }
+    def __ref__(self):
+        return f'<Mydata {self.id}>'
+    def serialize(self):
+        return {
+            "id": self.id,
+            "detail": self.detail,
+            # ¿hay que meter las relaciones?
+        }
