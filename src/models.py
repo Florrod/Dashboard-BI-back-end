@@ -34,7 +34,7 @@ class Enterprise(db.Model):
             "phone": self.phone,
             "email": self.email,
             "is_active": self.is_active,
-            "(brand_id)": list(map(lambda x: x.serialize(), self.brand_id)),
+            "brand_id": list(map(lambda x: x.serialize(), self.brand_id)),
             # linea nueva insertada debajo !
             # do not serialize the password, its a security breach
         }

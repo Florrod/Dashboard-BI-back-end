@@ -108,7 +108,7 @@ def add_brand():
     body = request.get_json()
     if 'name' not in body:
         return 'please specify the name of the company', 400
-    new_brand = Brand(name=body['name'], logo=body['logo'])
+    new_brand = Brand(name=body['name'], logo=body['logo'], enterprise_to_id=body['enterprise_to_id'])
     db.session.add(new_brand)
     db.session.commit()
     return jsonify(new_brand.serialize()), 200
