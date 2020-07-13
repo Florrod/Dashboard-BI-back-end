@@ -8,7 +8,7 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, Enterprise, Brand, Integration, Mydata
+from models import db, Enterprise, Brand, Integration, Mydata, Platform
 from create_database import init_database
 #from models import Person
 
@@ -190,6 +190,31 @@ def add_mydata():
     db.session.add(new_mydata)
     db.session.commit()
     return jsonify(new_mydata.serialize()), 200
+
+#METODOS PARA PLATFORM
+
+@app.route('/integration/platform', methods=['GET'])
+def get_all_myplatform():
+    all_platform = Platform.query.all()
+    platforms = list(map(lambda platform: platform.serialize(), all_platform))
+    return jsonify(platforms),200
+
+@app.route('/integration/platform/<int:id>', methods=['GET'])
+def get_single_platform(id):
+    single_platform = Platform.query.filter_by(id=id).first_or_404()
+    return jsonify(single_platform.serialize()),200
+
+@app.route('/integration/platform', methods=['POST'])
+def add_platform():
+    body = request.get_json()
+    if 'name' not in body:
+        return 'please specify the platform´s name', 400
+    if 'relation_integration' not in body:
+        return 'please specify the relation', 400
+    new_platform = Platform(name=body['name'], relation_integration=body['relation_integration'])
+    db.session.add(new_platform)
+    db.session.commit()
+    return jsonify(new_platform.serialize()), 200
 
 if __name__ == '__main__':
     PORT = int(os.environ.get('PORT', 3000))

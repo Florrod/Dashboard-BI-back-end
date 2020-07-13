@@ -75,9 +75,8 @@ class Integration(db.Model):
     id= db.Column(db.Integer, primary_key=True)
     API_key= db.Column(db.String(120), nullable=True)
     # deleted = db.Column(db.Boolean(), default=False) #¿Esto está bien? hay que incluirlo en serialize y cómo
-    # platform_id = db.Column(db.Integer, db.ForeignKey('platform.id'), nullable=False)
+    platform_id = db.relationship('Platform', backref='integration', lazy=True)
     brand_to_id = db.Column(db.Integer, db.ForeignKey('brand.id'), nullable=False)
-    # relation_data = db.relationship("Mydata", backref='integration', lazy=True)
     
     # def __ref__(self):
     #     return f'<Integration {self.id}>'
@@ -86,26 +85,26 @@ class Integration(db.Model):
         return {
             "id": self.id,
             "API_key": self.API_key,
+            "platform_id": list(map(lambda x: x.serialize(), self.platform_id))
             # "deleted": self.deleted,
             # "relation_data": list(map(lambda x: x.serialize(), self.relation_data))
             # if not self.user.deleted else None
         }    
 
-# class Platform(db.Model):
-#     id= db.Column(db.Integer, primary_key=True)
-#     name = db.Column(db.String(120))
-#     relation_integration = db.relationship('Integration', backref='platform', lazy=True)
+class Platform(db.Model):
+    id= db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120))
+    relation_integration = db.Column(db.Integer, db.ForeignKey('integration.id'), nullable=False)
 
-#     # def __ref__(self):
-#     #     return f'<Platform {self.name}>'
+    # def __ref__(self):
+    #     return f'<Platform {self.name}>'
 
-#     def serialize(self):
-#         return {
-#             "id": self.id,
-#             "name": self.name,
-#             "relation_integration": list(map(lambda x: x.serialize(), self.relation_integration))
-#             # ¿hay que meter las relaciones?
-#         }  
+    def serialize(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            # ¿hay que meter las relaciones?
+        }  
 
 class Mydata(db.Model):
     id= db.Column(db.Integer, primary_key=True)
