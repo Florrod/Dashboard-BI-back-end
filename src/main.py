@@ -155,6 +155,15 @@ def delete_single_integration(id):
     db.session.commit()
     return jsonify(single_integration.serialize()),200
 
+@app.route('/enterprise/brand/integration/<int:id>', methods=['PUT'])
+def update_integration(id):
+    body = request.get_json()
+    update_single_integration =Integration.query.filter_by(id=body['id']).first_or_404()
+    update_single_integration.API_key = body['API_key']
+    update_single_integration.brand_to_id = body['brand_to_id']
+    db.session.commit()
+    return jsonify(update_single_integration.serialize()),200
+
 if __name__ == '__main__':
     PORT = int(os.environ.get('PORT', 3000))
     app.run(host='0.0.0.0', port=PORT, debug=False)
