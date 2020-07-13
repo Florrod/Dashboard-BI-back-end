@@ -8,7 +8,7 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, Enterprise, Brand
+from models import db, Enterprise, Brand, Integration
 from create_database import init_database
 #from models import Person
 
@@ -111,6 +111,7 @@ def add_brand():
     new_brand = Brand(name=body['name'], logo=body['logo'], enterprise_to_id=body['enterprise_to_id'])
     db.session.add(new_brand)
     db.session.commit()
+    # new_brand.save()
     return jsonify(new_brand.serialize()), 200
 
 @app.route('/enterprise/brand/<int:brand_id>', methods=['PUT'])
@@ -130,6 +131,29 @@ def delete_single_brand(id):
     return jsonify(single_brand.serialize()),200
 
 #METODOS PARA INTEGRATION
+
+@app.route('/enterprise/brand/integration', methods=['GET'])
+def get_all_integration():
+    all_integration = Integration.query.all()
+    integrations = list(map(lambda integration: integration.serialize(), all_integration))
+    return jsonify(integrations),200
+
+@app.route('/enterprise/brand/integration', methods=['POST'])
+def add_integration():
+    body = request.get_json()
+    if 'API_key' not in body:
+        return 'please specify the API_key', 400
+    new_integration = Integration(API_key=body['API_key'], brand_to_id=body['brand_to_id'])
+    db.session.add(new_integration)
+    db.session.commit()
+    return jsonify(new_integration.serialize()), 200
+
+@app.route('/enterprise/brand/integration/<int:id>', methods=['DELETE'])
+def delete_single_integration(id):
+    single_integration =Integration.query.filter_by(id=id).first_or_404()
+    db.session.delete(single_integration)
+    db.session.commit()
+    return jsonify(single_integration.serialize()),200
 
 if __name__ == '__main__':
     PORT = int(os.environ.get('PORT', 3000))

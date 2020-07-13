@@ -24,6 +24,10 @@ class Enterprise(db.Model):
 
     # def __repr__(self):
     #     return '<Enterprise %r>' % self.name
+    def save(self):
+        db.session.add(self)
+        db.session.commit
+        return self
 
     def serialize(self):
         return {
@@ -44,8 +48,7 @@ class Brand(db.Model):
     name= db.Column(db.String(120), unique=True, nullable=True)
     logo= db.Column(db.String(120), nullable=True)
     enterprise_to_id = db.Column(db.Integer, db.ForeignKey('enterprise.id'), nullable=False)
-    
-    # relation_integration = db.relationship('Integration', backref='brand', lazy=True)
+    relation_integration = db.relationship('Integration', backref='brand', lazy=True)
 
     # def __init__(self, name, logo):
     #     self.name = name
@@ -59,28 +62,32 @@ class Brand(db.Model):
             "id": self.id,
             "name": self.name,
             "logo": self.logo,
-            # "relation_integration": list(map(lambda x: x.serialize(), self.relation_integration)),
+            "relation_integration": list(map(lambda x: x.serialize(), self.relation_integration)),
         }
+    # def save(self):
+    #     db.session.add(self)
+    #     db.session.commit
+    #     return self
 
-# class Integration(db.Model):
-#     id= db.Column(db.Integer, primary_key=True)
-#     API_key= db.Column(db.String(120), nullable=True)
-#     deleted = db.Column(db.Boolean(), default=False) #¿Esto está bien? hay que incluirlo en serialize y cómo
-#     platform_id = db.Column(db.Integer, db.ForeignKey('platform.id'), nullable=False)
-#     brand_to_id = db.Column(db.Integer, db.ForeignKey('brand.id'), nullable=False)
-#     relation_data = db.relationship("Midata", backref='integration', lazy=True)
+class Integration(db.Model):
+    id= db.Column(db.Integer, primary_key=True)
+    API_key= db.Column(db.String(120), nullable=True)
+    # deleted = db.Column(db.Boolean(), default=False) #¿Esto está bien? hay que incluirlo en serialize y cómo
+    # platform_id = db.Column(db.Integer, db.ForeignKey('platform.id'), nullable=False)
+    brand_to_id = db.Column(db.Integer, db.ForeignKey('brand.id'), nullable=False)
+    # relation_data = db.relationship("Midata", backref='integration', lazy=True)
     
-#     # def __ref__(self):
-#     #     return f'<Integration {self.id}>'
+    # def __ref__(self):
+    #     return f'<Integration {self.id}>'
 
-#     def serialize(self):
-#         return {
-#             "id": self.id,
-#             "API_key": self.API_key,
-#             "deleted": self.deleted,
-#             "relation_data": list(map(lambda x: x.serialize(), self.relation_data))
-#             # if not self.user.deleted else None
-#         }    
+    def serialize(self):
+        return {
+            "id": self.id,
+            "API_key": self.API_key,
+            # "deleted": self.deleted,
+            # "relation_data": list(map(lambda x: x.serialize(), self.relation_data))
+            # if not self.user.deleted else None
+        }    
 
 # class Platform(db.Model):
 #     id= db.Column(db.Integer, primary_key=True)
