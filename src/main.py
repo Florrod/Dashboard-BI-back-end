@@ -2,26 +2,61 @@
 This module takes care of starting the API Server, Loading the DB and Adding the endpoints
 """
 import os
-from flask import Flask, request, jsonify, url_for, json
+from flask import Flask, request, jsonify, url_for, json, render_template, redirect, url_for, abort
 from flask_migrate import Migrate
 from flask_swagger import swagger
+from flask_login import LoginManager, login_user
+from url_helper import is_safe_url
+from flask_wtf import FlaskForm
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
 from models import db, Enterprise, Brand
 from create_database import init_database
+from login_form import MyForm
 #from models import Person
+
 
 app = Flask(__name__)
 app.url_map.strict_slashes = False
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DB_CONNECTION_STRING')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 init_database()
+login_manager = LoginManager()
+login_manager.init_app(app)
 MIGRATE = Migrate(app, db)
 db.init_app(app)
 CORS(app)
 setup_admin(app)
 
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    return Enterprise.get_some_user_id(user_id=user_id)
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    # Here we use a class of some kind to represent and validate our
+    # client-side form data. For example, WTForms is a library that will
+    # handle this for us, and we use a custom LoginForm to validate.
+    form = MyForm()
+    if form.validate_on_submit():
+        # Login and validate the user.
+        # user should be an instance of your `User` class
+
+        user = Enterprise.get_user(email=form.email.data, password=form.password.data)
+        
+        login_user(user)
+
+        next = request.args.get('next')
+        # is_safe_url should check if the url is safe for redirects.
+        # See http://flask.pocoo.org/snippets/62/ for an example.
+        if not is_safe_url(next):
+            return abort(400)
+
+        return redirect(next or url_for('sitemap'))
+    return render_template('login.html', form=form)
 
 
 # Handle/serialize errors like a JSON object
