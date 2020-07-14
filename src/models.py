@@ -1,8 +1,13 @@
 from flask_sqlalchemy import SQLAlchemy
 
+from sqlalchemy.orm import relationship
+from sqlalchemy import Column, ForeignKey, Integer, String
+from random import randint
+from flask_login import UserMixin
+
 db = SQLAlchemy()
 
-class Enterprise(db.Model):
+class Enterprise(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     CIF_number = db.Column(db.String(10), unique=True, nullable=True)
     name = db.Column(db.String(120), unique=True, nullable=True)
@@ -28,6 +33,31 @@ class Enterprise(db.Model):
         db.session.add(self)
         db.session.commit
         return self
+
+
+    def __init__(self, CIF_number, name, password, address, phone, email, is_active):
+        self.CIF_number = CIF_number
+        self.name = name
+        self.password = password
+        self.address = address
+        self.phone = phone
+        self.email = email
+        self.is_active = is_active
+
+    @classmethod
+    def get_some_user_id(cls,user_id):
+        return cls.query.filter_by(id=user_id).one_or_none()
+    
+    @classmethod
+    def get_user(cls, email, password):
+        user_find = cls.query.filter_by(email=email, password=password).one()
+        if user_find:
+            return user_find
+        else:
+            return None
+        
+    def __repr__(self):
+        return '<Enterprise %r>' % self.name
 
     def serialize(self):
         return {
