@@ -21,6 +21,7 @@ flask-admin = "*"
 sqlalchemy-utils = "*"
 flask-login = "*"
 flask-wtf = "*"
+email-validator = "*"
 
 [requires]
 python_version = "3.7"
