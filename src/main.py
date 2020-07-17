@@ -11,7 +11,7 @@ from flask_wtf import FlaskForm
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, Enterprise, Brand, Integration, Mydata, Platform
+from models import db, Enterprise, Brand, Integration, Platform, Clients, Order, Client_Platform, LineItem
 from create_database import init_database
 from login_form import MyForm
 #from models import Person
