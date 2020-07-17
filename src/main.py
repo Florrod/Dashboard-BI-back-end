@@ -8,7 +8,7 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, Enterprise, Brand, Integration, Platform, Clients, Order, Client_Platform, LineItem
+from models import db, Enterprise, Brand, Integration, Platform, Clients, Order, LineItem
 from create_database import init_database
 #from models import Person
 
@@ -108,7 +108,7 @@ def add_brand():
     body = request.get_json()
     if 'name' not in body:
         return 'please specify the name of the company', 400
-    new_brand = Brand(name=body['name'], logo=body['logo'], enterprise_to_id=body['enterprise_to_id'])
+    new_brand = Brand(name=body['name'], logo=body['logo'], enterprise_id=body['enterprise_id'])
     db.session.add(new_brand)
     db.session.commit()
     # new_brand.save()
@@ -130,91 +130,126 @@ def delete_single_brand(id):
     db.session.commit()
     return jsonify(single_brand.serialize()),200
 
+
+#METODOS PARA PLATFORM
+
+@app.route('/platform', methods=['GET'])
+def get_all_myplatform():
+    all_platform = Platform.query.all()
+    platforms = list(map(lambda platform: platform.serialize(), all_platform))
+    return jsonify(platforms),200
+
+@app.route('/platform/<int:id>', methods=['GET'])
+def get_single_platform(id):
+    single_platform = Platform.query.filter_by(id=id).first_or_404()
+    return jsonify(single_platform.serialize()),200
+
+@app.route('/platform', methods=['POST'])
+def add_platform():
+    body = request.get_json()
+    if 'name' not in body:
+        return 'please specify the platform´s name', 400
+    new_platform = Platform(name=body['name'])
+    db.session.add(new_platform)
+    db.session.commit()
+    return jsonify(new_platform.serialize()), 200
+
+@app.route('/platform/<int:id>', methods=['DELETE'])
+def delete_single_platform(id):
+    single_platform =Platform.query.filter_by(id=id).first_or_404()
+    db.session.delete(single_platform)
+    db.session.commit()
+    return jsonify(single_platform.serialize()),200
+
 #METODOS PARA INTEGRATION
 
-@app.route('/enterprise/brand/integration', methods=['GET'])
+@app.route('/platform/integration', methods=['GET'])
 def get_all_integration():
     all_integration = Integration.query.all()
     integrations = list(map(lambda integration: integration.serialize(), all_integration))
     return jsonify(integrations),200
 
-@app.route('/enterprise/brand/integration', methods=['POST'])
+@app.route('/platform/integration', methods=['POST'])
 def add_integration():
     body = request.get_json()
     if 'API_key' not in body:
         return 'please specify the API_key', 400
-    new_integration = Integration(API_key=body['API_key'], brand_to_id=body['brand_to_id'])
+    new_integration = Integration(API_key=body['API_key'], brand_id=body['brand_id'])
     db.session.add(new_integration)
     db.session.commit()
     return jsonify(new_integration.serialize()), 200
 
-@app.route('/enterprise/brand/integration/<int:id>', methods=['DELETE'])
+@app.route('/platform/integration/<int:id>', methods=['DELETE'])
 def delete_single_integration(id):
     single_integration =Integration.query.filter_by(id=id).first_or_404()
     db.session.delete(single_integration)
     db.session.commit()
     return jsonify(single_integration.serialize()),200
 
-@app.route('/enterprise/brand/integration/<int:id>', methods=['PUT'])
+@app.route('/platform/integration/<int:id>', methods=['PUT'])
 def update_integration(id):
     body = request.get_json()
     update_single_integration =Integration.query.filter_by(id=body['id']).first_or_404()
     update_single_integration.API_key = body['API_key']
-    update_single_integration.brand_to_id = body['brand_to_id']
+    update_single_integration.brand_id = body['brand_id']
     db.session.commit()
     return jsonify(update_single_integration.serialize()),200
 
-#METODOS PARA MYDATA
+#METODOS PARA ORDER
 
-@app.route('/enterprise/brand/mydata', methods=['GET'])
-def get_all_mydata():
-    all_mydata = Mydata.query.all()
-    mydatas = list(map(lambda data: data.serialize(), all_mydata))
-    return jsonify(mydatas),200
+@app.route('/enterprise/brand/order', methods=['GET'])
+def get_all_order():
+    all_order = Order.query.all()
+    orders = list(map(lambda order: order.serialize(), all_order))
+    return jsonify(orders),200
 
-@app.route('/enterprise/brand/mydata/<int:id>', methods=['GET'])
-def get_single_mydata(id):
-    single_data = Mydata.query.filter_by(id=id).first_or_404()
-    return jsonify(single_data.serialize()),200
+@app.route('/enterprise/brand/order/<int:id>', methods=['GET'])
+def get_single_order(id):
+    single_order = Order.query.filter_by(id=id).first_or_404()
+    return jsonify(single_order.serialize()),200
 
-@app.route('/enterprise/brand/mydata', methods=['POST'])
-def add_mydata():
+@app.route('/enterprise/brand/order', methods=['POST'])
+def add_order():
     body = request.get_json()
-    if 'detail' not in body:
-        return 'please specify the detail', 400
-    if 'brand_to_id' not in body:
-        return 'please specify the brand', 400
-    if 'integration_to_id' not in body:
-        return 'please specify the Integration', 400
-    new_mydata = Mydata(detail=body['detail'], brand_to_id=body['brand_to_id'], integration_to_id=body['integration_to_id'])
-    db.session.add(new_mydata)
+    if 'date' not in body:
+        return 'please specify the date', 400
+    if 'total_price' not in body:
+        return 'please specify the total price', 400
+    if 'review' not in body:
+        return 'please specify the review', 400
+    new_order = Order(date=body['date'], total_price=body['total_price'], review=body['review'])
+    db.session.add(new_order)
     db.session.commit()
-    return jsonify(new_mydata.serialize()), 200
+    return jsonify(new_order.serialize()), 200
 
-#METODOS PARA PLATFORM
+#METODOS PARA LINEITEM
 
-@app.route('/integration/platform', methods=['GET'])
-def get_all_myplatform():
-    all_platform = Platform.query.all()
-    platforms = list(map(lambda platform: platform.serialize(), all_platform))
-    return jsonify(platforms),200
+@app.route('/enterprise/brand/order/line-item', methods=['GET'])
+def get_all_line_item():
+    all_line_item = LineItem.query.all()
+    line_item = list(map(lambda line_item: line_item.serialize(), all_line_item))
+    return jsonify(line_item),200
 
-@app.route('/integration/platform/<int:id>', methods=['GET'])
-def get_single_platform(id):
-    single_platform = Platform.query.filter_by(id=id).first_or_404()
-    return jsonify(single_platform.serialize()),200
+@app.route('/enterprise/brand/order/line-item/<int:id>', methods=['GET'])
+def get_single_line_item(id):
+    single_line_item = LineItem.query.filter_by(id=id).first_or_404()
+    return jsonify(single_line_item.serialize()),200
 
-@app.route('/integration/platform', methods=['POST'])
-def add_platform():
+@app.route('/enterprise/brand/order/line-item', methods=['POST'])
+def add_line_item():
     body = request.get_json()
-    if 'name' not in body:
-        return 'please specify the platform´s name', 400
-    if 'relation_integration' not in body:
-        return 'please specify the relation', 400
-    new_platform = Platform(name=body['name'], relation_integration=body['relation_integration'])
-    db.session.add(new_platform)
+    if 'product_name' not in body:
+        return 'please specify the product name', 400
+    if 'quantity' not in body:
+        return 'please specify the quantity', 400
+    if 'price' not in body:
+        return 'please specify the price', 400
+    new_line_item = Order(product_name=body['product_name'], quantity=body['quantity'], price=body['price'])
+    db.session.add(new_line_item)
     db.session.commit()
-    return jsonify(new_platform.serialize()), 200
+    return jsonify(new_line_item.serialize()), 200
+
+
 
 if __name__ == '__main__':
     PORT = int(os.environ.get('PORT', 3000))
