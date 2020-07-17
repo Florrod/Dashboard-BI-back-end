@@ -14,10 +14,12 @@ from admin import setup_admin
 from models import db, Enterprise, Brand, Integration, Platform, Clients, Order, Client_Platform, LineItem
 from create_database import init_database
 from login_form import MyForm
+from flask_bootstrap import Bootstrap
 #from models import Person
 
 
 app = Flask(__name__)
+Bootstrap(app)
 app.url_map.strict_slashes = False
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DB_CONNECTION_STRING')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False

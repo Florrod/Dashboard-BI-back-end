@@ -1,7 +1,8 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField
-from wtforms.validators import DataRequired
+from wtforms import StringField, PasswordField, BooleanField
+from wtforms.validators import DataRequired, Email
 
 class MyForm(FlaskForm):
-    email = StringField('email', validators=[DataRequired()])
-    password = StringField('password', validators=[DataRequired()])
+    email = StringField('email', validators=[DataRequired(), Email(message='Please introduce a valid email')])
+    password = PasswordField('password', validators=[DataRequired()])
+    remember = BooleanField('Remember me')
