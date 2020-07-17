@@ -24,6 +24,7 @@ class Enterprise(db.Model):
 
     def __repr__(self):
         return '<Enterprise %r>' % self.name
+    #__repr__ function should return a printable representation of the object, most likely one of the ways possible to create this object
 
     def save(self):
         db.session.add(self)
@@ -81,7 +82,7 @@ class Integration(db.Model):
     relation_order = db.relationship('Order', backref='integration', lazy=True)
     
     def __repr__(self):
-    return '<Integration %r>' % self.API_key
+        return '<Integration %r>' % self.API_key
 
     def serialize(self):
         return {
@@ -100,7 +101,7 @@ class Platform(db.Model):
     relation_integration = db.relationship('Integration', backref='platform', lazy=True)
 
     def __repr__(self):
-    return '<Platform %r>' % self.name
+        return '<Platform %r>' % self.name
 
     def serialize(self):
         return {
@@ -120,7 +121,7 @@ class Clients(db.Model):
     #preguntar lo del campo calculado de quantity orders
 
     def __repr__(self):
-    return '<Clients %r>' % self.email
+        return '<Clients %r>' % self.email
 
     def serialize(self):
         return {
@@ -134,12 +135,12 @@ class Clients(db.Model):
 class Client_Platform(db.Model):
     id= db.Column(db.Integer, primary_key=True)
     review = db.Column(db.Integer) #preguntar si es int o string al ser estrellitas
-    client_id = db.Column(db.Integer, db.ForeignKey('client.id'), nullable=False)
+    client_id = db.Column(db.Integer, db.ForeignKey('clients.id'), nullable=False)
     platform_id = db.Column(db.Integer, db.ForeignKey('platform.id'), nullable=False)
 
 
     def __repr__(self):
-    return '<Client_Platform %r>' % self.
+        return '<Client_Platform %r>' % self.review
 
 
     def serialize(self):
@@ -154,12 +155,12 @@ class Order(db.Model):
     date = db.Column(db.String(250))
     total_price = db.Column(db.Float)
     brand_id = db.Column(db.Integer, db.ForeignKey('brand.id'), nullable=False)
-    client_id = db.Column(db.Integer, db.ForeignKey('client.id'), nullable=False)
+    client_id = db.Column(db.Integer, db.ForeignKey('clients.id'), nullable=False)
     integration_id = db.Column(db.Integer, db.ForeignKey('integration.id'), nullable=False)
     relation_lineItem = db.relationship('LineItem', backref='order', lazy=True)
 
-    def __ref__(self):
-        return f'<Order {self.id}>'
+    def __repr__(self):
+        return '<Order %r>' % self.total_price
 
     def serialize(self):
         return {
@@ -177,8 +178,9 @@ class LineItem(db.Model):
     price = db.Column(db.Float)
     order_id = db.Column(db.Integer, db.ForeignKey('order.id'))
 
-    def __ref__(self):
-        return f'<LineItem {self.id}>'
+    def __repr__(self):
+        return '<LineItem %r>' % self.product_name
+
     def serialize(self):
         return {
             "id": self.id,
