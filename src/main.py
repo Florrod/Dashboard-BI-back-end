@@ -10,6 +10,7 @@ from utils import APIException, generate_sitemap
 from admin import setup_admin
 from models import db, Enterprise, Brand, Integration, Platform, Clients, Order, LineItem
 from create_database import init_database
+from wrapper_justeat import WrapperJustEat
 #from models import Person
 
 app = Flask(__name__)
@@ -21,6 +22,16 @@ MIGRATE = Migrate(app, db)
 db.init_app(app)
 CORS(app)
 setup_admin(app)
+
+@app.cli.command("syncapi")
+def syncapi():
+    integration = Integration.query.filter_by(platform_id=1)
+    data= jsonify(Integration.getData())
+    WrapperJustEat.translateAndSave(data)
+    for integration in integrations:
+        data= integration.getData()
+        if (integration.platform.name == "JustEat"):
+            WrapperJustEat.translateAndSave(data)
 
 
 
