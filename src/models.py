@@ -127,7 +127,13 @@ class Integration(db.Model):
             # if not self.user.deleted else None
         }    
 
-    def getData(self, from_date=""):
+    def getData(self, from_date=""): 
+
+# import requests 
+# r = requests.get(url = URL, params = PARAMS) 
+  
+# extracting data in json format 
+# data = r.json() 
         data = {
             "orders":[
                 {
@@ -155,6 +161,7 @@ class Integration(db.Model):
 class Clients(db.Model):
     id= db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=True)
+    orders_count = db.Column(db.Integer)
 
     orders = db.relationship('Order', backref='clients', lazy=True)
 
@@ -176,7 +183,7 @@ class Clients(db.Model):
 
     @classmethod
     def getWithEmail(cls, email):
-        return cls.db.session.filter_by(email=email).one_or_none()
+        return db.session.query(cls).filter_by(email=email).one_or_none()
     # ¿classmethod?
 
 

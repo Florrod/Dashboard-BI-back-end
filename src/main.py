@@ -25,9 +25,11 @@ setup_admin(app)
 
 @app.cli.command("syncapi")
 def syncapi():
-    integration = Integration.query.filter_by(platform_id=1)
-    data= jsonify(Integration.getData())
+    integration = Integration(platform_id=1)
+    data= integration.getData()
     WrapperJustEat.translateAndSave(data)
+    return 
+    integrations = Integration.query.all()
     for integration in integrations:
         data= integration.getData()
         if (integration.platform.name == "JustEat"):
