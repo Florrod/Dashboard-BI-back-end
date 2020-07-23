@@ -8,8 +8,9 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, Enterprise, Brand, Integration, Platform, Clients, Order, LineItem
+from models import db, Enterprise, Brand, Integration, Platform, Clients, Order, LineItem, DatabaseManager
 from create_database import init_database
+from wrapper import Wrapper
 from wrapper_justeat import WrapperJustEat
 #from models import Person
 
@@ -25,15 +26,14 @@ setup_admin(app)
 
 @app.cli.command("syncapi")
 def syncapi():
-    integration = Integration(platform_id=1)
-    data= integration.getData()
-    WrapperJustEat.translateAndSave(data)
-    return 
-    integrations = Integration.query.all()
+    integrations = Integration.all()
     for integration in integrations:
-        data= integration.getData()
-        if (integration.platform.name == "JustEat"):
-            WrapperJustEat.translateAndSave(data)
+        data = integration.getData()
+        wrapper = Wrapper(integration)
+        order = wrapper.wrap()
+        order.addToDbSession()
+    DatabaseManager.commitDatabaseSessionPendingChanges()
+    return
 
 
 

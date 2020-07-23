@@ -4,8 +4,16 @@ db = SQLAlchemy()
 
 class DatabaseManager():
     @staticmethod
-    def commit():
+    def commitDatabaseSessionPendingChanges():
         db.session.commit()
+
+class ModelMixin():
+    def addToDbSession(self):
+        db.session.add(self)
+
+    @classmethod
+    def all(cls):
+        return cls.query.all()
 
 class Enterprise(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -103,7 +111,7 @@ class Platform(db.Model):
 
         }    
 
-class Integration(db.Model):
+class Integration(db.Model,ModelMixin):
     id= db.Column(db.Integer, primary_key=True)
     API_key= db.Column(db.String(120), nullable=True)
     # deleted = db.Column(db.Boolean(), default=False) #¿Esto está bien? hay que incluirlo en serialize y cómo
@@ -158,7 +166,7 @@ class Integration(db.Model):
 
 
 
-class Clients(db.Model):
+class Clients(db.Model, ModelMixin):
     id= db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=True)
     orders_count = db.Column(db.Integer)
