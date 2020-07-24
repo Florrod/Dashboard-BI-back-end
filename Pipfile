@@ -19,6 +19,11 @@ gunicorn = "*"
 mysqlclient = "*"
 flask-admin = "*"
 sqlalchemy-utils = "*"
+flask-login = "*"
+flask-wtf = "*"
+email-validator = "*"
+flask-bootstrap = "*"
+flask-jwt-extended = "*"
 
 
 [requires]
