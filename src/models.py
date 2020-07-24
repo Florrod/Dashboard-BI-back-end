@@ -49,6 +49,10 @@ class Enterprise(db.Model, UserMixin):
     @classmethod
     def get_some_user_id(cls,user_id):
         return cls.query.filter_by(id=user_id).one_or_none()
+
+    @classmethod
+    def getEnterpriseWithLoginCredentials(cls, email, password):
+        return db.session.query(cls).filter(Enterprise.email == email).filter(Enterprise.password == password).one_or_none()
     
     @classmethod
     def get_user(cls, email, password):

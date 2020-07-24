@@ -23,6 +23,7 @@ flask-login = "*"
 flask-wtf = "*"
 email-validator = "*"
 flask-bootstrap = "*"
+flask-jwt-extended = "*"
 
 [requires]
 python_version = "3.7"
