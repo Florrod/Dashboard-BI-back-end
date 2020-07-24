@@ -25,6 +25,7 @@ email-validator = "*"
 flask-bootstrap = "*"
 flask-jwt-extended = "*"
 
+
 [requires]
 python_version = "3.7"
 
@@ -34,3 +35,4 @@ init="flask db init"
 migrate="flask db migrate"
 upgrade="flask db upgrade"
 deploy="echo 'Please follow this 3 steps to deploy: https://github.com/4GeeksAcademy/flask-rest-hello/blob/master/README.md#deploy-your-website-to-heroku' "
+syncapi = "flask syncapi"
