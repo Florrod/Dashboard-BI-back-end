@@ -257,7 +257,6 @@ def add_platform():
 
 @app.route('/enterprise/brand/integration', methods=['GET'])
 @login_required
-
 def get_all_integration():
     all_integration = Integration.query.all()
     integrations = list(map(lambda integration: integration.serialize(), all_integration))
@@ -265,7 +264,6 @@ def get_all_integration():
 
 @app.route('/enterprise/brand/integration', methods=['POST'])
 @login_required
-
 def add_integration():
     body = request.get_json()
     if 'API_key' not in body:
@@ -277,7 +275,6 @@ def add_integration():
 
 @app.route('/enterprise/brand/integration/<int:id>', methods=['DELETE'])
 @login_required
-
 def delete_single_integration(id):
     single_integration =Integration.query.filter_by(id=id).first_or_404()
     db.session.delete(single_integration)
@@ -287,7 +284,6 @@ def delete_single_integration(id):
 
 @app.route('/enterprise/brand/integration/<int:id>', methods=['PUT'])
 @login_required
-
 def update_integration(id):
     body = request.get_json()
     update_single_integration =Integration.query.filter_by(id=body['id']).first_or_404()
@@ -297,7 +293,6 @@ def update_integration(id):
     return jsonify(update_single_integration.serialize()),200
 
 #METODOS PARA ORDER
-
 
 @app.route('/enterprise/brand/order', methods=['GET'])
 def get_all_order():
@@ -338,9 +333,22 @@ def get_all_line_item():
 def get_single_line_item(id):
     single_line_item = LineItem.query.filter_by(id=id).first_or_404()
     return jsonify(single_line_item.serialize()),200
+  
+@app.route('/enterprise/brand/order/line-item', methods=['POST'])
+def add_line_item():
+    body = request.get_json()
+    if 'product_name' not in body:
+        return 'please specify the product name', 400
+    if 'quantity' not in body:
+        return 'please specify the quantity', 400
+    if 'price' not in body:
+        return 'please specify the price', 400
+    new_line_item = Order(product_name=body['product_name'], quantity=body['quantity'], price=body['price'])
+    db.session.add(new_line_item)
+    db.session.commit()
+    return jsonify(new_line_item.serialize()), 200
 
-# @app.route('/enterprise/brand/order/line-item', methods=['POST'])
-# def add_line_item():
+
 if __name__ == '__main__':
     PORT = int(os.environ.get('PORT', 3000))
     app.run(host='0.0.0.0', port=PORT, debug=False)

@@ -7,7 +7,6 @@ from flask_login import UserMixin
 
 db = SQLAlchemy()
 
-
 class DatabaseManager():
     @staticmethod
     def commit():
@@ -26,8 +25,7 @@ class Enterprise(db.Model, UserMixin):
     is_active = db.Column(db.Boolean, unique=False, nullable=False)
 
     brand_id = db.relationship('Brand', cascade="all,delete", backref='enterprise', lazy=True)
-
-
+ 
     def __repr__(self):
         return '<Enterprise %r>' % self.name
     #__repr__ function should return a printable representation of the object, most likely one of the ways possible to create this object
@@ -78,6 +76,7 @@ class Brand(db.Model):
 
     enterprise_id = db.Column(db.Integer, db.ForeignKey('enterprise.id',ondelete='CASCADE', onupdate='CASCADE'),
         nullable=False)
+    
     integrations = db.relationship('Integration', cascade="all,delete", backref='brand', lazy=True)
     orders = db.relationship('Order', cascade="all,delete", backref='brand', lazy=True)
 
@@ -112,16 +111,13 @@ class Platform(db.Model):
         return {
             "id": self.id,
             "name": self.name,
-            "code": self.code,
             "integrations": list(map(lambda x: x.serialize(), self.integrations)),
-            "orders": list(map(lambda x: x.serialize(), self.orders)),
-
+            "orders": list(map(lambda x: x.serialize(), self.orders))
         }    
 
 class Integration(db.Model):
     id= db.Column(db.Integer, primary_key=True)
     API_key= db.Column(db.String(120), nullable=True)
-    # deleted = db.Column(db.Boolean(), default=False) #¿Esto está bien? hay que incluirlo en serialize y cómo
     brand_id = db.Column(db.Integer, db.ForeignKey('brand.id', ondelete='CASCADE', onupdate='CASCADE'),
         nullable=False)
     platform_id = db.Column(db.Integer, db.ForeignKey('platform.id'), nullable=False)
@@ -137,9 +133,6 @@ class Integration(db.Model):
             "API_key": self.API_key,
             "brand_id": self.brand_id,
             "orders": list(map(lambda x: x.serialize(), self.orders))
-            # "deleted": self.deleted,
-            # "relation_data": list(map(lambda x: x.serialize(), self.relation_data))
-            # if not self.user.deleted else None
         }    
 
     def getData(self, from_date=""): 
@@ -187,7 +180,7 @@ class Clients(db.Model):
         return {
             "id": self.id,
             "email": self.email,
-            "orders": list(map(lambda x: x.serialize(), self.orders))  
+            "orders": list(map(lambda x: x.serialize(), self.orders))
         } 
 
     def save(self):
@@ -197,7 +190,6 @@ class Clients(db.Model):
     def getWithEmail(cls, email):
         return db.session.query(cls).filter_by(email=email).one_or_none()
     # ¿classmethod?
-
 
 class Order(db.Model):
     id= db.Column(db.Integer, primary_key=True)
