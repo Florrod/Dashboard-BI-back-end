@@ -18,9 +18,8 @@ def setup_admin(app):
     admin.add_view(ModelView(Integration, db.session))
     admin.add_view(ModelView(Clients, db.session))
     admin.add_view(ModelView(Order, db.session))
-    # admin.add_view(ModelView(Integration, db.session))
-    # admin.add_view(ModelView(Platform, db.session))
-    # admin.add_view(ModelView(Midata, db.session))
+    admin.add_view(ModelView(LineItem, db.session))
+ 
 
     # You can duplicate that line to add mew models
     # admin.add_view(ModelView(YourModelName, db.session))

@@ -27,14 +27,6 @@ class Enterprise(db.Model, UserMixin):
 
     brand_id = db.relationship('Brand', cascade="all,delete", backref='enterprise', lazy=True)
 
-    # def __init__(self, CIF_number, name, password, address, phone, email, is_active):
-    #     self.CIF_number = CIF_number
-    #     self.name = name
-    #     self.password = password
-    #     self.address = address
-    #     self.phone = phone
-    #     self.email = email
-    #     self.is_active = is_active
 
     def __repr__(self):
         return '<Enterprise %r>' % self.name
@@ -45,15 +37,6 @@ class Enterprise(db.Model, UserMixin):
     #     db.session.commit
     #     return self -> devolver true o false si utilizamos está función ya que lo que quieres devolver es si la enterprise se a creado o no
 
-
-    def __init__(self, CIF_number, name, password, address, phone, email, is_active):
-        self.CIF_number = CIF_number
-        self.name = name
-        self.password = password
-        self.address = address
-        self.phone = phone
-        self.email = email
-        self.is_active = is_active
 
     @classmethod
     def get_some_user_id(cls,user_id):
@@ -98,10 +81,6 @@ class Brand(db.Model):
     integrations = db.relationship('Integration', cascade="all,delete", backref='brand', lazy=True)
     orders = db.relationship('Order', cascade="all,delete", backref='brand', lazy=True)
 
-    # def __init__(self, name, logo):
-    #     self.name = name
-    #     self.logo = logo
-
     def __repr__(self):
         return '<Brand %r>' % self.name
 
@@ -122,7 +101,6 @@ class Brand(db.Model):
 class Platform(db.Model):
     id= db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), unique=True, nullable=True)
-    code = db.Column(db.String(120), unique=True, nullable=True)
 
     integrations = db.relationship('Integration', backref='platform', lazy=True)
     orders = db.relationship('Order', backref='platform', lazy=True)
@@ -144,10 +122,10 @@ class Integration(db.Model):
     id= db.Column(db.Integer, primary_key=True)
     API_key= db.Column(db.String(120), nullable=True)
     # deleted = db.Column(db.Boolean(), default=False) #¿Esto está bien? hay que incluirlo en serialize y cómo
-
     brand_id = db.Column(db.Integer, db.ForeignKey('brand.id', ondelete='CASCADE', onupdate='CASCADE'),
         nullable=False)
     platform_id = db.Column(db.Integer, db.ForeignKey('platform.id'), nullable=False)
+
     orders = db.relationship('Order', backref='integration', lazy=True)
     
     def __repr__(self):
@@ -193,8 +171,6 @@ class Integration(db.Model):
 
         return data
 
-
-
 class Clients(db.Model):
     id= db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=True)
@@ -211,8 +187,7 @@ class Clients(db.Model):
         return {
             "id": self.id,
             "email": self.email,
-            "orders": list(map(lambda x: x.serialize(), self.orders)),
-            
+            "orders": list(map(lambda x: x.serialize(), self.orders))  
         } 
 
     def save(self):
@@ -229,13 +204,13 @@ class Order(db.Model):
     date = db.Column(db.String(250))
     total_price = db.Column(db.Float)
     review = db.Column(db.Float)
-
     platform_id = db.Column(db.Integer, db.ForeignKey('platform.id'), nullable=False)
     brand_id = db.Column(db.Integer, db.ForeignKey('brand.id', ondelete='CASCADE', onupdate='CASCADE'),
         nullable=False)
     integration_id= db.Column(db.Integer, db.ForeignKey('integration.id', ondelete='CASCADE', onupdate='CASCADE'),
         nullable=False)
     client_id = db.Column(db.Integer, db.ForeignKey('clients.id'), nullable=False)
+    
     lineItems = db.relationship('LineItem', cascade="all,delete", backref='order', lazy=True)
 
     def __repr__(self):
