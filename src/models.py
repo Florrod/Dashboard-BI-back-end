@@ -1,8 +1,19 @@
 from flask_sqlalchemy import SQLAlchemy
 
+from sqlalchemy.orm import relationship
+from sqlalchemy import Column, ForeignKey, Integer, String
+from random import randint
+from flask_login import UserMixin
+
 db = SQLAlchemy()
 
-class Enterprise(db.Model):
+class DatabaseManager():
+    @staticmethod
+    def commit():
+        db.session.commit()
+
+
+class Enterprise(db.Model, UserMixin):
 
     id = db.Column(db.Integer, primary_key=True)
     CIF_number = db.Column(db.String(10), unique=True, nullable=True)
@@ -24,6 +35,26 @@ class Enterprise(db.Model):
     #     db.session.commit
     #     return self -> devolver true o false si utilizamos está función ya que lo que quieres devolver es si la enterprise se a creado o no
 
+
+    @classmethod
+    def get_some_user_id(cls,user_id):
+        return cls.query.filter_by(id=user_id).one_or_none()
+
+    @classmethod
+    def getEnterpriseWithLoginCredentials(cls, email, password):
+        return db.session.query(cls).filter(Enterprise.email == email).filter(Enterprise.password == password).one_or_none()
+    
+    @classmethod
+    def get_user(cls, email, password):
+        user_find = cls.query.filter_by(email=email, password=password).one()
+        if user_find:
+            return user_find
+        else:
+            return None
+        
+    def __repr__(self):
+        return '<Enterprise %r>' % self.name
+
     def serialize(self):
         return {
             "id": self.id,
@@ -42,15 +73,12 @@ class Brand(db.Model):
     id= db.Column(db.Integer, primary_key=True)
     name= db.Column(db.String(120), unique=True, nullable=True)
     logo= db.Column(db.String(120), nullable=True)
+
     enterprise_id = db.Column(db.Integer, db.ForeignKey('enterprise.id',ondelete='CASCADE', onupdate='CASCADE'),
         nullable=False)
     
     integrations = db.relationship('Integration', cascade="all,delete", backref='brand', lazy=True)
     orders = db.relationship('Order', cascade="all,delete", backref='brand', lazy=True)
-
-    # def __init__(self, name, logo):
-    #     self.name = name
-    #     self.logo = logo
 
     def __repr__(self):
         return '<Brand %r>' % self.name
@@ -105,9 +133,36 @@ class Integration(db.Model):
             "API_key": self.API_key,
             "brand_id": self.brand_id,
             "orders": list(map(lambda x: x.serialize(), self.orders))
-            # "deleted": self.deleted
         }    
 
+    def getData(self, from_date=""): 
+
+# import requests 
+# r = requests.get(url = URL, params = PARAMS) 
+  
+# extracting data in json format 
+# data = r.json() 
+        data = {
+            "orders":[
+                {
+                    "id": 1,
+                    "lines":[
+                        {
+                            "id": 1,
+                            "name": "Producto 1",
+                            "price": 10,
+                            "quantity": 1
+                        }
+                    ],
+                    "client":{
+                        "name": "Juan",
+                        "email": "juan@gmail.com"
+                    }
+                }
+            ]
+        }
+
+        return data
 
 class Clients(db.Model):
     id= db.Column(db.Integer, primary_key=True)
@@ -125,8 +180,16 @@ class Clients(db.Model):
         return {
             "id": self.id,
             "email": self.email,
-            "orders": list(map(lambda x: x.serialize(), self.orders))  
-        }  
+            "orders": list(map(lambda x: x.serialize(), self.orders))
+        } 
+
+    def save(self):
+        db.session.add(self) 
+
+    @classmethod
+    def getWithEmail(cls, email):
+        return db.session.query(cls).filter_by(email=email).one_or_none()
+    # ¿classmethod?
 
 class Order(db.Model):
     id= db.Column(db.Integer, primary_key=True)
