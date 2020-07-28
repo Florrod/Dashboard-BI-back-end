@@ -7,7 +7,14 @@ from flask_login import UserMixin
 
 db = SQLAlchemy()
 
+class DatabaseManager():
+    @staticmethod
+    def commit():
+        db.session.commit()
+
+
 class Enterprise(db.Model, UserMixin):
+
     id = db.Column(db.Integer, primary_key=True)
     CIF_number = db.Column(db.String(10), unique=True, nullable=True)
     name = db.Column(db.String(120), unique=True, nullable=True)
@@ -16,33 +23,18 @@ class Enterprise(db.Model, UserMixin):
     phone = db.Column(db.String(80),nullable=True)
     email = db.Column(db.String(120), unique=True, nullable=True)
     is_active = db.Column(db.Boolean, unique=False, nullable=False)
-    brand_id = db.relationship('Brand', backref='enterprise', lazy=True)
 
-    # def __init__(self, CIF_number, name, password, address, phone, email, is_active):
-    #     self.CIF_number = CIF_number
-    #     self.name = name
-    #     self.password = password
-    #     self.address = address
-    #     self.phone = phone
-    #     self.email = email
-    #     self.is_active = is_active
+    brand_id = db.relationship('Brand', cascade="all,delete", backref='enterprise', lazy=True)
+ 
+    def __repr__(self):
+        return '<Enterprise %r>' % self.name
+    #__repr__ function should return a printable representation of the object, most likely one of the ways possible to create this object
 
-    # def __repr__(self):
-    #     return '<Enterprise %r>' % self.name
-    def save(self):
-        db.session.add(self)
-        db.session.commit
-        return self
+    # def save(self):
+    #     db.session.add(self)
+    #     db.session.commit
+    #     return self -> devolver true o false si utilizamos está función ya que lo que quieres devolver es si la enterprise se a creado o no
 
-
-    def __init__(self, CIF_number, name, password, address, phone, email, is_active):
-        self.CIF_number = CIF_number
-        self.name = name
-        self.password = password
-        self.address = address
-        self.phone = phone
-        self.email = email
-        self.is_active = is_active
 
     @classmethod
     def get_some_user_id(cls,user_id):
@@ -81,76 +73,168 @@ class Brand(db.Model):
     id= db.Column(db.Integer, primary_key=True)
     name= db.Column(db.String(120), unique=True, nullable=True)
     logo= db.Column(db.String(120), nullable=True)
-    enterprise_to_id = db.Column(db.Integer, db.ForeignKey('enterprise.id'), nullable=False)
-    relation_integration = db.relationship('Integration', backref='brand', lazy=True)
-    relation_mi_data = db.relationship('Mydata', backref='brand', lazy=True)
 
-    # def __init__(self, name, logo):
-    #     self.name = name
-    #     self.logo = logo
+    enterprise_id = db.Column(db.Integer, db.ForeignKey('enterprise.id',ondelete='CASCADE', onupdate='CASCADE'),
+        nullable=False)
+    
+    integrations = db.relationship('Integration', cascade="all,delete", backref='brand', lazy=True)
+    orders = db.relationship('Order', cascade="all,delete", backref='brand', lazy=True)
 
-    # def __ref__(self):
-    #     return f'<Brand {self.name}>'
+    def __repr__(self):
+        return '<Brand %r>' % self.name
 
     def serialize(self):
         return {
             "id": self.id,
             "name": self.name,
             "logo": self.logo,
-            "relation_integration": list(map(lambda x: x.serialize(), self.relation_integration)),
-            "relation_mi_data": list(map(lambda x: x.serialize(), self.relation_mi_data)),
+            "enterprise_id": self.enterprise_id,
+            "integrations": list(map(lambda x: x.serialize(), self.integrations)),
+            "orders": list(map(lambda x: x.serialize(), self.orders)), # lo podríamos quitar ya que en este endpoint no nos interesan las orders. Iriamos a orders para verlas
         }
     # def save(self):
     #     db.session.add(self)
     #     db.session.commit
     #     return self
 
-class Integration(db.Model):
-    id= db.Column(db.Integer, primary_key=True)
-    API_key= db.Column(db.String(120), nullable=True)
-    # deleted = db.Column(db.Boolean(), default=False) #¿Esto está bien? hay que incluirlo en serialize y cómo
-    platform_id = db.relationship('Platform', backref='integration', lazy=True)
-    brand_to_id = db.Column(db.Integer, db.ForeignKey('brand.id'), nullable=False)
-    
-    # def __ref__(self):
-    #     return f'<Integration {self.id}>'
-
-    def serialize(self):
-        return {
-            "id": self.id,
-            "API_key": self.API_key,
-            "platform_id": list(map(lambda x: x.serialize(), self.platform_id))
-            # "deleted": self.deleted,
-            # "relation_data": list(map(lambda x: x.serialize(), self.relation_data))
-            # if not self.user.deleted else None
-        }    
-
 class Platform(db.Model):
     id= db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(120))
-    relation_integration = db.Column(db.Integer, db.ForeignKey('integration.id'), nullable=False)
+    name = db.Column(db.String(120), unique=True, nullable=True)
 
-    # def __ref__(self):
-    #     return f'<Platform {self.name}>'
+    integrations = db.relationship('Integration', backref='platform', lazy=True)
+    orders = db.relationship('Order', backref='platform', lazy=True)
+
+    def __repr__(self):
+        return '<Platform %r>' % self.name
 
     def serialize(self):
         return {
             "id": self.id,
             "name": self.name,
-            # ¿hay que meter las relaciones?
-        }  
+            "integrations": list(map(lambda x: x.serialize(), self.integrations)),
+            "orders": list(map(lambda x: x.serialize(), self.orders))
+        }    
 
-class Mydata(db.Model):
+class Integration(db.Model):
     id= db.Column(db.Integer, primary_key=True)
-    detail = db.Column(db.String(250))
-    brand_to_id = db.Column(db.Integer, db.ForeignKey('brand.id'), nullable=False)
-    integration_to_id = db.Column(db.Integer, db.ForeignKey('integration.id'), nullable=False)
+    API_key= db.Column(db.String(120), nullable=True)
+    brand_id = db.Column(db.Integer, db.ForeignKey('brand.id', ondelete='CASCADE', onupdate='CASCADE'),
+        nullable=False)
+    platform_id = db.Column(db.Integer, db.ForeignKey('platform.id'), nullable=False)
 
-    def __ref__(self):
-        return f'<Mydata {self.id}>'
+    orders = db.relationship('Order', backref='integration', lazy=True)
+    
+    def __repr__(self):
+        return '<Integration %r>' % self.API_key
+
     def serialize(self):
         return {
             "id": self.id,
-            "detail": self.detail,
-            # ¿hay que meter las relaciones?
+            "API_key": self.API_key,
+            "brand_id": self.brand_id,
+            "orders": list(map(lambda x: x.serialize(), self.orders))
+        }    
+
+    def getData(self, from_date=""): 
+
+# import requests 
+# r = requests.get(url = URL, params = PARAMS) 
+  
+# extracting data in json format 
+# data = r.json() 
+        data = {
+            "orders":[
+                {
+                    "id": 1,
+                    "lines":[
+                        {
+                            "id": 1,
+                            "name": "Producto 1",
+                            "price": 10,
+                            "quantity": 1
+                        }
+                    ],
+                    "client":{
+                        "name": "Juan",
+                        "email": "juan@gmail.com"
+                    }
+                }
+            ]
+        }
+
+        return data
+
+class Clients(db.Model):
+    id= db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(120), unique=True, nullable=True)
+    orders_count = db.Column(db.Integer)
+
+    orders = db.relationship('Order', backref='clients', lazy=True)
+
+    #preguntar lo del campo calculado de quantity orders
+
+    def __repr__(self):
+        return '<Clients %r>' % self.email
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "email": self.email,
+            "orders": list(map(lambda x: x.serialize(), self.orders))
+        } 
+
+    def save(self):
+        db.session.add(self) 
+
+    @classmethod
+    def getWithEmail(cls, email):
+        return db.session.query(cls).filter_by(email=email).one_or_none()
+    # ¿classmethod?
+
+class Order(db.Model):
+    id= db.Column(db.Integer, primary_key=True)
+    date = db.Column(db.String(250))
+    total_price = db.Column(db.Float)
+    review = db.Column(db.Float)
+    platform_id = db.Column(db.Integer, db.ForeignKey('platform.id'), nullable=False)
+    brand_id = db.Column(db.Integer, db.ForeignKey('brand.id', ondelete='CASCADE', onupdate='CASCADE'),
+        nullable=False)
+    integration_id= db.Column(db.Integer, db.ForeignKey('integration.id', ondelete='CASCADE', onupdate='CASCADE'),
+        nullable=False)
+    client_id = db.Column(db.Integer, db.ForeignKey('clients.id'), nullable=False)
+    
+    lineItems = db.relationship('LineItem', cascade="all,delete", backref='order', lazy=True)
+
+    def __repr__(self):
+        return '<Order %r>' % self.total_price
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "date": self.date,
+            "total_price": self.total_price,
+            "lineItems": self.lineItems,
+            "brand_id": self.brand_id
+        }
+    def save(self):
+        db.session.add(self)
+
+class LineItem(db.Model):
+    id= db.Column(db.Integer, primary_key=True)
+    product_name = db.Column(db.String(250))
+    quantity = db.Column(db.Integer)
+    price = db.Column(db.Float)
+    order_id = db.Column(db.Integer, db.ForeignKey('order.id', ondelete='CASCADE', onupdate='CASCADE'),
+        nullable=False)
+
+    def __repr__(self):
+        return '<LineItem %r>' % self.product_name
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "product_name": self.product_name,
+            "quantity": self.quantity,
+            "price": self.price,
+            "order_id": self.order_id
         }
