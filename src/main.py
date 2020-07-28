@@ -15,7 +15,7 @@ from models import db, Enterprise, Brand, Integration, Mydata, Platform
 from create_database import init_database
 from login_form import MyForm
 from flask_bootstrap import Bootstrap
-from flask_jwt_extended import (JWTManager, jwt_required, create_access_token, get_raw_jwt, get_jwt_identity, create_refresh_token, jwt_refresh_token_required)
+from flask_jwt_extended import (JWTManager, jwt_required, create_access_token, get_raw_jwt, get_jwt_identity, create_refresh_token, jwt_refresh_token_required,get_jwt_identity)
 #from models import Person
 
 
@@ -52,26 +52,7 @@ def load_user(user_id):
 
 @app.route('/login', methods=['POST'])
 def login():
-    # # Here we use a class of some kind to represent and validate our
-    # # client-side form data. For example, WTForms is a library that will
-    # # handle this for us, and we use a custom LoginForm to validate.
-    # form = MyForm()
-    # if form.validate_on_submit():
-    #     # Login and validate the user.
-    #     # user should be an instance of your `User` class
 
-    #     user = Enterprise.get_user(email=form.email.data, password=form.password.data)
-        
-    #     login_user(user)
-
-    #     next = request.args.get('next')
-    #     # is_safe_url should check if the url is safe for redirects.
-    #     # See http://flask.pocoo.org/snippets/62/ for an example.
-    #     if not is_safe_url(next):
-    #         return abort(400)
-
-    #     return redirect(next or url_for('sitemap'))
-    # return render_template('login.html', form=form)
     if not request.is_json:
         return jsonify({'msg': 'Missing JSON in request'}), 400
 
@@ -110,6 +91,13 @@ def logout():
     jti = get_raw_jwt()['jti']
     blacklist.add(jti)
     return jsonify({'msg': 'Successfully logged out'}), 200
+
+@app.route('/protected', methods=['GET'])
+@jwt_required
+def protected():
+    # Access the identity of the current user with get_jwt_identity
+    current_user = get_jwt_identity()
+    return jsonify(logged_in_as=current_user), 200
 
 
 # Handle/serialize errors like a JSON object
