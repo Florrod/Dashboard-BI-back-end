@@ -16,7 +16,7 @@ from create_database import init_database
 from wrapper_justeat import WrapperJustEat
 from login_form import MyForm
 from flask_bootstrap import Bootstrap
-from flask_jwt_extended import (JWTManager, jwt_required, create_access_token, get_raw_jwt, get_jwt_identity, create_refresh_token, jwt_refresh_token_required)
+from flask_jwt_extended import (JWTManager, jwt_required, create_access_token, get_raw_jwt, get_jwt_identity, create_refresh_token, jwt_refresh_token_required,get_jwt_identity)
 #from models import Person
 
 
@@ -103,6 +103,13 @@ def logout():
     jti = get_raw_jwt()['jti']
     blacklist.add(jti)
     return jsonify({'msg': 'Successfully logged out'}), 200
+
+@app.route('/protected', methods=['GET'])
+@jwt_required
+def protected():
+    # Access the identity of the current user with get_jwt_identity
+    current_user = get_jwt_identity()
+    return jsonify(logged_in_as=current_user), 200
 
 
 
