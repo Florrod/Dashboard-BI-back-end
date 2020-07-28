@@ -126,20 +126,26 @@ def sitemap():
 #METODOS PARA ENTERPRISE
 
 @app.route('/enterprise', methods=['GET'])
-@login_required
+@jwt_required
 def get_all_enterprises():
     all_enterprises = Enterprise.query.all()
     enterprises = list(map(lambda enterprise: enterprise.serialize(), all_enterprises))
     return jsonify(enterprises),200
 
 @app.route('/enterprise/<int:id>', methods=['GET'])
-@login_required
+@jwt_required
 def get_single_enterprise(id):
-    single_enterprise =Enterprise.query.filter_by(id=id).first_or_404()
-    return jsonify(single_enterprise.serialize()),200
+    current_enterprise_id = get_jwt_identity() #la empresa que me han pedido
+    current_enterprise_logged = Enterprise.get_some_user_id(current_enterprise_id)
+    if current_enterprise_logged.check_is_admin() or current_enterprise_id == id:
+        return Enterprise.get_some_user_id(id)
+    else:
+        raise "Acces denied"
+    # single_enterprise =Enterprise.query.filter_by(id=id).first_or_404()
+    # return jsonify(check_is_admin.serialize()),200
 
 @app.route('/enterprise/<int:id>', methods=['DELETE'])
-@login_required
+@jwt_required
 def delete_single_enterprise(id):
     single_enterprise =Enterprise.query.filter_by(id=id).first_or_404()
     db.session.delete(single_enterprise)
@@ -147,7 +153,7 @@ def delete_single_enterprise(id):
     return jsonify(single_enterprise.serialize()),200
 
 @app.route('/enterprise/<int:id>', methods=['PUT'])
-@login_required
+@jwt_required
 def update_enterprise(id):
     body = request.get_json()
     update_single_enterprise =Enterprise.query.filter_by(id=body['id']).first_or_404()
@@ -162,7 +168,7 @@ def update_enterprise(id):
     return jsonify(update_single_enterprise.serialize()),200
 
 @app.route('/enterprise', methods=['POST'])
-@login_required
+@jwt_required
 def add_enterprise():
     body = request.get_json()
     if 'CIF_number' not in body:
@@ -187,20 +193,20 @@ def add_enterprise():
 #METODOS PARA BRAND
 
 @app.route('/enterprise/brand', methods=['GET'])
-@login_required
+@jwt_required
 def get_all_brand():
     all_brand = Brand.query.all()
     brands = list(map(lambda brand: brand.serialize(), all_brand))
     return jsonify(brands),200
 
 @app.route('/enterprise/brand/<int:id>', methods=['GET'])
-@login_required
+@jwt_required
 def get_single_brand(id):
     single_brand =Brand.query.filter_by(id=id).first_or_404()
     return jsonify(single_brand.serialize()),200
 
 @app.route('/enterprise/brand', methods=['POST'])
-@login_required
+@jwt_required
 def add_brand():
     body = request.get_json()
     if 'name' not in body:
@@ -212,7 +218,7 @@ def add_brand():
     return jsonify(new_brand.serialize()), 200
 
 @app.route('/enterprise/brand/<int:brand_id>', methods=['PUT'])
-@login_required
+@jwt_required
 def update_brand(brand_id):
     body = request.get_json()
     update_single_brand =Brand.query.filter_by(id=body['id']).first_or_404()
@@ -222,7 +228,7 @@ def update_brand(brand_id):
     return jsonify(update_single_brand.serialize()),200
 
 @app.route('/enterprise/brand/<int:id>', methods=['DELETE'])
-@login_required
+@jwt_required
 def delete_single_brand(id):
     single_brand =Brand.query.filter_by(id=id).first_or_404()
     db.session.delete(single_brand)
@@ -232,20 +238,20 @@ def delete_single_brand(id):
 #METODOS PARA PLATFORM
 
 @app.route('/integration/platform', methods=['GET'])
-@login_required
+@jwt_required
 def get_all_myplatform():
     all_platform = Platform.query.all()
     platforms = list(map(lambda platform: platform.serialize(), all_platform))
     return jsonify(platforms),200
 
 @app.route('/integration/platform/<int:id>', methods=['GET'])
-@login_required
+@jwt_required
 def get_single_platform(id):
     single_platform = Platform.query.filter_by(id=id).first_or_404()
     return jsonify(single_platform.serialize()),200
 
 @app.route('/integration/platform', methods=['POST'])
-@login_required
+@jwt_required
 def add_platform():
 
     body = request.get_json()
@@ -263,14 +269,14 @@ def add_platform():
 #METODOS PARA INTEGRATION
 
 @app.route('/enterprise/brand/integration', methods=['GET'])
-@login_required
+@jwt_required
 def get_all_integration():
     all_integration = Integration.query.all()
     integrations = list(map(lambda integration: integration.serialize(), all_integration))
     return jsonify(integrations),200
 
 @app.route('/enterprise/brand/integration', methods=['POST'])
-@login_required
+@jwt_required
 def add_integration():
     body = request.get_json()
     if 'API_key' not in body:
@@ -281,7 +287,7 @@ def add_integration():
     return jsonify(new_integration.serialize()), 200
 
 @app.route('/enterprise/brand/integration/<int:id>', methods=['DELETE'])
-@login_required
+@jwt_required
 def delete_single_integration(id):
     single_integration =Integration.query.filter_by(id=id).first_or_404()
     db.session.delete(single_integration)
@@ -290,7 +296,7 @@ def delete_single_integration(id):
 
 
 @app.route('/enterprise/brand/integration/<int:id>', methods=['PUT'])
-@login_required
+@jwt_required
 def update_integration(id):
     body = request.get_json()
     update_single_integration =Integration.query.filter_by(id=body['id']).first_or_404()
