@@ -4,6 +4,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy import Column, ForeignKey, Integer, String
 from random import randint
 from flask_login import UserMixin
+from flask import jsonify
 
 db = SQLAlchemy()
 
@@ -39,7 +40,10 @@ class Enterprise(db.Model, UserMixin):
 
     @classmethod
     def get_some_user_id(cls,user_id):
-        return cls.query.filter_by(id=user_id).one_or_none()
+        return cls.query.filter_by(id=user_id).one_or_none() 
+
+    def jsonifyArray(elements):
+        return jsonify(list(map(lambda element: element.serialize(), elements)))
 
     def check_is_admin(self):
         return self.is_admin #eres el administrador? Si es admin es true.
@@ -69,7 +73,7 @@ class Enterprise(db.Model, UserMixin):
             "email": self.email,
             "is_active": self.is_active,
             "brand_id": list(map(lambda x: x.serialize(), self.brand_id)),
-            # "is_admin": self.is_admin
+            "is_admin": self.is_admin
             # linea nueva insertada debajo !
             # do not serialize the password, its a security breach
         }

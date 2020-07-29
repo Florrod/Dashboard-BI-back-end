@@ -128,9 +128,16 @@ def sitemap():
 @app.route('/enterprise', methods=['GET'])
 @jwt_required
 def get_all_enterprises():
-    all_enterprises = Enterprise.query.all()
-    enterprises = list(map(lambda enterprise: enterprise.serialize(), all_enterprises))
-    return jsonify(enterprises),200
+    current_enterprise_id = get_jwt_identity()
+    current_enterprise_logged = Enterprise.get_some_user_id(current_enterprise_id)
+    if not current_enterprise_logged.check_is_admin():
+        return jsonify({'msg': 'Access denied'}), 400
+    
+    return Enterprise.jsonifyArray(Enterprise.query.all())
+
+    # all_enterprises = Enterprise.query.all()
+    # enterprises = list(map(lambda enterprise: enterprise.serialize(), all_enterprises))
+    #     return jsonify(enterprises),200
 
 @app.route('/enterprise/<int:id>', methods=['GET'])
 @jwt_required
@@ -138,19 +145,28 @@ def get_single_enterprise(id):
     current_enterprise_id = get_jwt_identity() #la empresa que me han pedido
     current_enterprise_logged = Enterprise.get_some_user_id(current_enterprise_id)
     if current_enterprise_logged.check_is_admin() or current_enterprise_id == id:
-        return Enterprise.get_some_user_id(id)
+        return jsonify(Enterprise.get_some_user_id(id).serialize()),200
     else:
-        raise "Acces denied"
+        return jsonify({'msg': 'Access denied'}), 400
     # single_enterprise =Enterprise.query.filter_by(id=id).first_or_404()
     # return jsonify(check_is_admin.serialize()),200
 
 @app.route('/enterprise/<int:id>', methods=['DELETE'])
 @jwt_required
 def delete_single_enterprise(id):
-    single_enterprise =Enterprise.query.filter_by(id=id).first_or_404()
-    db.session.delete(single_enterprise)
-    db.session.commit()
-    return jsonify(single_enterprise.serialize()),200
+    # # single_enterprise =Enterprise.query.filter_by(id=id).first_or_404()
+    # db.session.delete(single_enterprise)
+    # db.session.commit()
+    # return jsonify(single_enterprise.serialize()),200
+
+    current_enterprise_id = get_jwt_identity() #la empresa que me han pedido
+    current_enterprise_logged = Enterprise.get_some_user_id(current_enterprise_id)
+    if current_enterprise_logged.check_is_admin():
+        db.session.delete(id=id)
+        db.session.commit()
+        return jsonify(Enterprise.get_some_user_id(id).serialize()),200
+    else:
+        return jsonify({'msg': 'Access denied'}), 400
 
 @app.route('/enterprise/<int:id>', methods=['PUT'])
 @jwt_required
@@ -168,7 +184,7 @@ def update_enterprise(id):
     return jsonify(update_single_enterprise.serialize()),200
 
 @app.route('/enterprise', methods=['POST'])
-@jwt_required
+# @jwt_required
 def add_enterprise():
     body = request.get_json()
     if 'CIF_number' not in body:
@@ -185,7 +201,9 @@ def add_enterprise():
          return 'please specify the email of the company', 400
     if 'is_active' not in body:
         return 'please specify the status of the company', 400
-    new_enterprise = Enterprise(CIF_number=body['CIF_number'], name=body['name'], password=body['password'], address=body['address'], phone=body['phone'], email=body['email'], is_active=body['is_active'])
+    if 'is_admin' not in body:
+        return 'please specify if you are an admin', 400
+    new_enterprise = Enterprise(CIF_number=body['CIF_number'], name=body['name'], password=body['password'], address=body['address'], phone=body['phone'], email=body['email'], is_active=body['is_active'], is_admin=body['is_admin'])
     db.session.add(new_enterprise)
     db.session.commit()
     return jsonify(new_enterprise.serialize()), 200
