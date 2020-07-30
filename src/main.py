@@ -17,6 +17,7 @@ from wrapper_justeat import WrapperJustEat
 from login_form import MyForm
 from flask_bootstrap import Bootstrap
 from flask_jwt_extended import (JWTManager, jwt_required, create_access_token, get_raw_jwt, get_jwt_identity, create_refresh_token, jwt_refresh_token_required,get_jwt_identity)
+from decorators.admin_required_decorator import admin_required
 #from models import Person
 
 
@@ -107,11 +108,21 @@ def logout():
 
 @app.route('/protected', methods=['GET'])
 @jwt_required
-def protected():
+@admin_required
+def protected(user):
     # Access the identity of the current user with get_jwt_identity
     #pedir al backend a que tipo de rol/user corresponde ese token (access_token)
-    current_user = get_jwt_identity()
-    return jsonify(logged_in_as=current_user), 200
+    #el user que nos viene es el admin
+    return jsonify(logged_in_as=user.serialize()), 200
+
+@app.route('/protected/<int:id>', methods=['GET'])
+@jwt_required
+@admin_required
+def protected_single(id, user):
+    # Access the identity of the current user with get_jwt_identity
+    #pedir al backend a que tipo de rol/user corresponde ese token (access_token)
+    #el user que nos viene es el admin
+    return jsonify({"user": user.serialize(), "id": id})
 
 
 
@@ -173,7 +184,8 @@ def delete_single_enterprise(id):
 
 @app.route('/enterprise/<int:id>', methods=['PUT'])
 @jwt_required
-def update_enterprise(id):
+@admin_required
+def update_enterprise(user, id):
     body = request.get_json()
     update_single_enterprise =Enterprise.query.filter_by(id=body['id']).first_or_404()
     update_single_enterprise.CIF_number = body['CIF_number']
@@ -187,7 +199,7 @@ def update_enterprise(id):
     return jsonify(update_single_enterprise.serialize()),200
 
 @app.route('/enterprise', methods=['POST'])
-# @jwt_required
+@jwt_required
 def add_enterprise():
     body = request.get_json()
     if 'CIF_number' not in body:
