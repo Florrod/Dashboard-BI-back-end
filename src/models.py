@@ -1,4 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
+from flask import requests  
 
 db = SQLAlchemy()
 
@@ -136,31 +137,29 @@ class Integration(db.Model,ModelMixin):
         }    
 
     def getData(self, from_date=""): 
-
-# import requests 
-# r = requests.get(url = URL, params = PARAMS) 
+        r = requests.get(url = "https://glovapi.docs.apiary.io/#reference/0/orders-collection/list-all-orders") 
   
 # extracting data in json format 
-# data = r.json() 
-        data = {
-            "orders":[
-                {
-                    "id": 1,
-                    "lines":[
-                        {
-                            "id": 1,
-                            "name": "Producto 1",
-                            "price": 10,
-                            "quantity": 1
-                        }
-                    ],
-                    "client":{
-                        "name": "Juan",
-                        "email": "juan@gmail.com"
-                    }
-                }
-            ]
-        }
+        data = r.json() 
+        # data = {
+            # "orders":[
+            #     {
+            #         "id": 1,
+            #         "lines":[
+            #             {
+            #                 "id": 1,
+            #                 "name": "Producto 1",
+            #                 "price": 10,
+            #                 "quantity": 1
+            #             }
+            #         ],
+            #         "client":{
+            #             "name": "Juan",
+            #             "email": "juan@gmail.com"
+            #         }
+            #     }
+            # ]
+        # }
 
         return data
 
@@ -170,6 +169,7 @@ class Clients(db.Model, ModelMixin):
     id= db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=True)
     orders_count = db.Column(db.Integer)
+    phone= db.Column(db.String(12), unique=True, nullable=True)
 
     orders = db.relationship('Order', backref='clients', lazy=True)
 
@@ -182,6 +182,7 @@ class Clients(db.Model, ModelMixin):
         return {
             "id": self.id,
             "email": self.email,
+            "phone": self.phone,
             "orders": list(map(lambda x: x.serialize(), self.orders)),
             
         } 
@@ -193,6 +194,10 @@ class Clients(db.Model, ModelMixin):
     def getWithEmail(cls, email):
         return db.session.query(cls).filter_by(email=email).one_or_none()
     # ¿classmethod?
+
+    @classmethod
+    def getWithPhone(cls, phone):
+        return db.session.query(cls).filter_by(phone=phone).one_or_none()
 
 
 class Order(db.Model):
