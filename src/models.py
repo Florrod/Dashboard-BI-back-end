@@ -40,13 +40,14 @@ class Enterprise(db.Model, UserMixin):
 
     @classmethod
     def get_some_user_id(cls,user_id):
-        return cls.query.filter_by(id=user_id).one_or_none() 
+        return cls.query.filter_by(id=user_id).one_or_none()
 
+    @staticmethod
     def jsonifyArray(elements):
         return jsonify(list(map(lambda element: element.serialize(), elements)))
 
     def check_is_admin(self):
-        return self.is_admin #eres el administrador? Si es admin es true.
+        return self.is_admin #eres el administrador? Si es admin es true. Es una funcion/metodo de instancia. Necesitamos una instancia. Si lo hacemos con la clase directamente está mal.
     
     @classmethod
     def getEnterpriseWithLoginCredentials(cls, email, password):

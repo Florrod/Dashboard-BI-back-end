@@ -76,7 +76,7 @@ def login():
     if not password:
         return jsonify({'msg': 'Missing password parameter'}), 400
 
-    user = Enterprise.getEnterpriseWithLoginCredentials(email, password)
+    user = Enterprise.getEnterpriseWithLoginCredentials(email, password) #instancia de empresa
 
     if user == None:
         return jsonify({'msg': 'La empresa o contraseña no existen'}), 400
@@ -85,7 +85,8 @@ def login():
 
     return jsonify({
         'access_token': access_token,
-        'refresh_token': create_refresh_token(identity=user.id)
+        'refresh_token': create_refresh_token(identity=user.id),
+        'is_admin': user.check_is_admin()
     }), 200
 
 @app.route('/refresh' , methods=['POST'])
@@ -108,6 +109,7 @@ def logout():
 @jwt_required
 def protected():
     # Access the identity of the current user with get_jwt_identity
+    #pedir al backend a que tipo de rol/user corresponde ese token (access_token)
     current_user = get_jwt_identity()
     return jsonify(logged_in_as=current_user), 200
 
@@ -160,11 +162,12 @@ def delete_single_enterprise(id):
     # return jsonify(single_enterprise.serialize()),200
 
     current_enterprise_id = get_jwt_identity() #la empresa que me han pedido
-    current_enterprise_logged = Enterprise.get_some_user_id(current_enterprise_id)
+    current_enterprise_logged = Enterprise.get_some_user_id(current_enterprise_id) 
+    enterprise_to_delete = Enterprise.get_some_user_id(id)
     if current_enterprise_logged.check_is_admin():
-        db.session.delete(id=id)
+        db.session.delete(enterprise_to_delete)
         db.session.commit()
-        return jsonify(Enterprise.get_some_user_id(id).serialize()),200
+        return jsonify(enterprise_to_delete.serialize()),200 #hay que mirar si devolver la empresa vacia está bien?? No tiene sentido , devolveriamos unicamente el 200 o 204
     else:
         return jsonify({'msg': 'Access denied'}), 400
 
