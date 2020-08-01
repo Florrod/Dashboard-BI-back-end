@@ -1,5 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
-from flask import requests  
+import requests
 
 db = SQLAlchemy()
 
@@ -205,6 +205,7 @@ class Order(db.Model):
     date = db.Column(db.String(250))
     total_price = db.Column(db.Float)
     review = db.Column(db.Float)
+    state = db.Column(db.String(250))
 
     platform_id = db.Column(db.Integer, db.ForeignKey('platform.id'), nullable=False)
     brand_id = db.Column(db.Integer, db.ForeignKey('brand.id', ondelete='CASCADE', onupdate='CASCADE'),
@@ -213,6 +214,10 @@ class Order(db.Model):
         nullable=False)
     client_id = db.Column(db.Integer, db.ForeignKey('clients.id'), nullable=False)
     lineItems = db.relationship('LineItem', cascade="all,delete", backref='order', lazy=True)
+
+    # def __init__(self, state='delivered' or 'canceled'): 
+    #     self.state = state + '!'
+
 
     def __repr__(self):
         return '<Order %r>' % self.total_price

@@ -10,8 +10,8 @@ from utils import APIException, generate_sitemap
 from admin import setup_admin
 from models import db, Enterprise, Brand, Integration, Platform, Clients, Order, LineItem, DatabaseManager
 from create_database import init_database
-from wrapper import Wrapper
-from wrapper_justeat import WrapperJustEat
+from wrappers import Wrapper
+
 #from models import Person
 
 app = Flask(__name__)
@@ -30,7 +30,7 @@ def syncapi():
     for integration in integrations:
         data = integration.getData()
         wrapper = Wrapper(integration)
-        order = wrapper.wrap()
+        order = wrapper.wrap(data)
         order.addToDbSession()
     DatabaseManager.commitDatabaseSessionPendingChanges()
     return

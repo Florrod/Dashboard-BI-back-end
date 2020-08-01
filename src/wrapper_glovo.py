@@ -1,9 +1,9 @@
-from models import Order, LineItem, Clients, Brand, Platform
-from wrapper import Wrapper
+from models import Order, LineItem, Clients
+from wrappers import Wrapper
 
 class WrapperGlovo(Wrapper):
 
-    def wrap(json) -> Order:
+    def wrap(self,json) -> Order:
         for orderJson in json:
 
             lineitems = wrapLineItems(orderJson['lines'])
@@ -14,18 +14,18 @@ class WrapperGlovo(Wrapper):
                 total_price = total_price,
                 lineitems = lineitems,
                 client = client,
-                platform_id = integration.platform.id,
-                brand_id = integration.brand.id
+                platform_id = self.integration.platform.id,
+                brand_id = self.integration.brand.id
             )
 
             return order
     
-    def wrapLineItems(orderJson): #Para el producto más pedido
+    def wrapLineItems(self,orderJson): #Para el producto más pedido
         lineitems = []
         lineitems.append(wrapLineItem(orderJson))
         return lineitems
 
-    def wrapLineItem(orderJson) -> LineItem:
+    def wrapLineItem(self,orderJson) -> LineItem:
         return LineItem(
             product_name = orderJson['description'],
             quantity = orderJson['quantity'],
@@ -33,7 +33,7 @@ class WrapperGlovo(Wrapper):
         )
 
 
-    def wrapClient(addressesJson) -> Clients:
+    def wrapClient(self,addressesJson) -> Clients: #Para el cliente recurrente y nuevo
 
         for address in addressesJson:
             if address['type'] == "DELIVERY":
@@ -53,28 +53,6 @@ class WrapperGlovo(Wrapper):
         return None
 
     
-
-
-{
-    "id": 1568879245,
-    "state": "DELIVERED",
-    "scheduleTime": 1568879245000,
-    "description": "Pollito frito",
-    "quantity": 2,
-    
-    "addresses": [
-    
-      {
-        "contactPhone": "+34622334455",
-      }
-    ],
-    "orderPrice": {
-      "amount": 2380,
-    },
-    "total": {
-      "amount": 590,
-    }
-  },
 
 
 
