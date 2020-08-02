@@ -130,42 +130,29 @@ class Integration(db.Model,ModelMixin):
             "id": self.id,
             "API_key": self.API_key,
             "brand_id": self.brand_id,
-            "orders": list(map(lambda x: x.serialize(), self.orders))
+            "orders": list(map(lambda x: x.serialize(), self.orders)),
+            "platform_id": self.platform_id
             # "deleted": self.deleted,
             # "relation_data": list(map(lambda x: x.serialize(), self.relation_data))
             # if not self.user.deleted else None
         }    
 
-    def getData(self, from_date=""): 
-        r = requests.get(url = "https://glovapi.docs.apiary.io/#reference/0/orders-collection/list-all-orders") 
-  
-# extracting data in json format 
-        data = r.json() 
-        # data = {
-            # "orders":[
-            #     {
-            #         "id": 1,
-            #         "lines":[
-            #             {
-            #                 "id": 1,
-            #                 "name": "Producto 1",
-            #                 "price": 10,
-            #                 "quantity": 1
-            #             }
-            #         ],
-            #         "client":{
-            #             "name": "Juan",
-            #             "email": "juan@gmail.com"
-            #         }
-            #     }
-            # ]
-        # }
+    def getData(self, from_date=""):
+        if self.platform_id == 1:
+            url = "https://private-ac88aa-justeapi.apiary-mock.com/orders"
+        if self.platform_id == 2:
+            url = "http://private-anon-3a76a4fc70-glovapi.apiary-proxy.com/orders"
 
-        return data
+        response = requests.get(url)
+        print("Response: ",response)
+        if response.status_code == 200:
+            print(response.text)
+            return response.json()
+        
+        return None
+    
 
-
-
-class Clients(db.Model, ModelMixin):
+class Clients(db.Model,ModelMixin):
     id= db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=True)
     orders_count = db.Column(db.Integer)

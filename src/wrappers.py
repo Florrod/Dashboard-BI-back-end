@@ -6,9 +6,9 @@ class Wrapper():
     def __init__(self, integration):
         self.integration = integration,
     def wrap(self, json) -> Order:
-        if self.integration.platform.id == 1:
+        if self.integration.platform_id == 1:
             wrapper = WrapperJustEat(self.integration)
-        elif self.integration.platform.id == 2:
+        elif self.integration.platform_id == 2:
             wrapper = WrapperGlovo(self.integration)
         else:
             raise APIException("Platform not supported")
@@ -25,7 +25,7 @@ class WrapperJustEat(Wrapper):
                 total_price = total_price,
                 lineitems = lineitems,
                 client = wrapClient(orderJson['client']),
-                platform_id = self.integration.platform.id,
+                platform_id = self.integration.platform_id,
                 brand_id = self.integration.brand.id
             )
             return order
@@ -70,7 +70,7 @@ class WrapperGlovo(Wrapper):
                 total_price = total_price,
                 lineitems = lineitems,
                 client = client,
-                platform_id = self.integration.platform.id,
+                platform_id = self.integration.platform_id,
                 brand_id = self.integration.brand.id
             )
 
