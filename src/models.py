@@ -4,6 +4,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy import Column, ForeignKey, Integer, String
 from random import randint
 from flask_login import UserMixin
+from flask import jsonify
 
 db = SQLAlchemy()
 
@@ -23,6 +24,7 @@ class Enterprise(db.Model, UserMixin):
     phone = db.Column(db.String(80),nullable=True)
     email = db.Column(db.String(120), unique=True, nullable=True)
     is_active = db.Column(db.Boolean, unique=False, nullable=False)
+    is_admin = db.Column(db.Boolean, unique=False, nullable=False)
 
     brand_id = db.relationship('Brand', cascade="all,delete", backref='enterprise', lazy=True)
  
@@ -40,6 +42,13 @@ class Enterprise(db.Model, UserMixin):
     def get_some_user_id(cls,user_id):
         return cls.query.filter_by(id=user_id).one_or_none()
 
+    @staticmethod
+    def jsonifyArray(elements):
+        return jsonify(list(map(lambda element: element.serialize(), elements)))
+
+    def check_is_admin(self):
+        return self.is_admin #eres el administrador? Si es admin es true. Es una funcion/metodo de instancia. Necesitamos una instancia. Si lo hacemos con la clase directamente está mal.
+    
     @classmethod
     def getEnterpriseWithLoginCredentials(cls, email, password):
         return db.session.query(cls).filter(Enterprise.email == email).filter(Enterprise.password == password).one_or_none()
@@ -65,6 +74,7 @@ class Enterprise(db.Model, UserMixin):
             "email": self.email,
             "is_active": self.is_active,
             "brand_id": list(map(lambda x: x.serialize(), self.brand_id)),
+            "is_admin": self.is_admin
             # linea nueva insertada debajo !
             # do not serialize the password, its a security breach
         }
