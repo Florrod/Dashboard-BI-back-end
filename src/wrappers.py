@@ -115,5 +115,5 @@ class WrapperJustEat(Wrapper):
 
         return client
         
-    return None
+        # return None
 

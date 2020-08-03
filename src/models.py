@@ -94,7 +94,6 @@ class Brand(db.Model):
 class Platform(db.Model):
     id= db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), unique=True, nullable=True)
-    code = db.Column(db.String(120), unique=True, nullable=True)
 
     integrations = db.relationship('Integration', backref='platform', lazy=True)
     orders = db.relationship('Order', backref='platform', lazy=True)
@@ -140,13 +139,13 @@ class Integration(db.Model,ModelMixin):
     def getData(self, from_date=""):
         if self.platform_id == 1:
             url = "https://private-ac88aa-justeapi.apiary-mock.com/orders"
-        if self.platform_id == 2:
+        elif self.platform_id == 2:
             url = "http://private-anon-3a76a4fc70-glovapi.apiary-proxy.com/orders"
 
         response = requests.get(url)
         print("Response: ",response)
         if response.status_code == 200:
-            print(response.text)
+            # print(response.text)
             return response.json()
         
         return None
@@ -178,16 +177,16 @@ class Clients(db.Model,ModelMixin):
     def save(self):
         db.session.add(self) 
 
-    @classmethod
-    def getWithEmail(cls, email):
-        # return db.session.query(cls).filter_by(email=email).one_or_none()
+    # @classmethod
+    # def getWithEmail(cls, email):
+    #     return db.session.query(cls).filter_by(email=email).one_or_none()
     # ¿classmethod?
 
     @classmethod
     def getWithPhone(cls, phone):
         return db.session.query(cls).filter_by(phone=phone).one_or_none()
 
-     @classmethod
+    @classmethod
     def getWithCustomerId(cls, customer_id):
         return db.session.query(cls).filter_by(id=id).one_or_none()
 
