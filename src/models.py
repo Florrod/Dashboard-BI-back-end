@@ -1,4 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
+import requests
 
 from sqlalchemy.orm import relationship
 from sqlalchemy import Column, ForeignKey, Integer, String
@@ -10,11 +11,18 @@ db = SQLAlchemy()
 
 class DatabaseManager():
     @staticmethod
-    def commit():
+    def commitDatabaseSessionPendingChanges():
         db.session.commit()
 
+class ModelMixin():
+    def addToDbSession(self):
+        db.session.add(self)
 
-class Enterprise(db.Model, UserMixin):
+    @classmethod
+    def all(cls):
+        return cls.query.all()
+
+class Enterprise(db.Model, ModelMixin):
 
     id = db.Column(db.Integer, primary_key=True)
     CIF_number = db.Column(db.String(10), unique=True, nullable=True)
@@ -79,7 +87,7 @@ class Enterprise(db.Model, UserMixin):
             # do not serialize the password, its a security breach
         }
 
-class Brand(db.Model):
+class Brand(db.Model,ModelMixin):
     id= db.Column(db.Integer, primary_key=True)
     name= db.Column(db.String(120), unique=True, nullable=True)
     logo= db.Column(db.String(120), nullable=True)
@@ -107,7 +115,7 @@ class Brand(db.Model):
     #     db.session.commit
     #     return self
 
-class Platform(db.Model):
+class Platform(db.Model, ModelMixin):
     id= db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), unique=True, nullable=True)
 
@@ -125,7 +133,7 @@ class Platform(db.Model):
             "orders": list(map(lambda x: x.serialize(), self.orders))
         }    
 
-class Integration(db.Model):
+class Integration(db.Model,ModelMixin):
     id= db.Column(db.Integer, primary_key=True)
     API_key= db.Column(db.String(120), nullable=True)
     brand_id = db.Column(db.Integer, db.ForeignKey('brand.id', ondelete='CASCADE', onupdate='CASCADE'),
@@ -142,70 +150,70 @@ class Integration(db.Model):
             "id": self.id,
             "API_key": self.API_key,
             "brand_id": self.brand_id,
-            "orders": list(map(lambda x: x.serialize(), self.orders))
+            "orders": list(map(lambda x: x.serialize(), self.orders)),
+            "platform_id": self.platform_id
+            # "deleted": self.deleted,
+            # "relation_data": list(map(lambda x: x.serialize(), self.relation_data))
+            # if not self.user.deleted else None
         }    
 
-    def getData(self, from_date=""): 
+    def getData(self, from_date=""):
+        if self.platform_id == 1:
+            url = "https://private-ac88aa-justeapi.apiary-mock.com/orders"
+        elif self.platform_id == 2:
+            url = "http://private-anon-3a76a4fc70-glovapi.apiary-proxy.com/orders"
 
-# import requests 
-# r = requests.get(url = URL, params = PARAMS) 
-  
-# extracting data in json format 
-# data = r.json() 
-        data = {
-            "orders":[
-                {
-                    "id": 1,
-                    "lines":[
-                        {
-                            "id": 1,
-                            "name": "Producto 1",
-                            "price": 10,
-                            "quantity": 1
-                        }
-                    ],
-                    "client":{
-                        "name": "Juan",
-                        "email": "juan@gmail.com"
-                    }
-                }
-            ]
-        }
-
-        return data
-
-class Clients(db.Model):
+        response = requests.get(url)
+        print("Response: ",response)
+        if response.status_code == 200:
+            # print(response.text)
+            return response.json()
+        
+        return None
+    
+class Clients(db.Model, ModelMixin):
     id= db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(120), unique=True, nullable=True)
+    # email = db.Column(db.String(120), unique=True, nullable=True)
     orders_count = db.Column(db.Integer)
+    customer_id_justeat = db.Column(db.String(12), unique=True, nullable=True)
+    phone= db.Column(db.String(12), unique=True, nullable=True)
 
     orders = db.relationship('Order', backref='clients', lazy=True)
 
     #preguntar lo del campo calculado de quantity orders
 
     def __repr__(self):
-        return '<Clients %r>' % self.email
+        return '<Clients %r>' % self.id
 
     def serialize(self):
         return {
             "id": self.id,
-            "email": self.email,
-            "orders": list(map(lambda x: x.serialize(), self.orders))
+            # "email": self.email,
+            "phone": self.phone,
+            "orders": list(map(lambda x: x.serialize(), self.orders)),
         } 
 
     def save(self):
         db.session.add(self) 
 
-    @classmethod
-    def getWithEmail(cls, email):
-        return db.session.query(cls).filter_by(email=email).one_or_none()
+    # @classmethod
+    # def getWithEmail(cls, email):
+    #     return db.session.query(cls).filter_by(email=email).one_or_none()
     # ¿classmethod?
+
+    @classmethod
+    def getWithPhone(cls, phone):
+        return db.session.query(cls).filter_by(phone=phone).one_or_none()
+
+    @classmethod
+    def getWithCustomerId(cls, customer_id):
+        return db.session.query(cls).filter_by(id=id).one_or_none()
 
 class Order(db.Model):
     id= db.Column(db.Integer, primary_key=True)
     date = db.Column(db.String(250))
     total_price = db.Column(db.Float)
-    review = db.Column(db.Float)
+    state = db.Column(db.String(250))
     platform_id = db.Column(db.Integer, db.ForeignKey('platform.id'), nullable=False)
     brand_id = db.Column(db.Integer, db.ForeignKey('brand.id', ondelete='CASCADE', onupdate='CASCADE'),
         nullable=False)
@@ -214,6 +222,10 @@ class Order(db.Model):
     client_id = db.Column(db.Integer, db.ForeignKey('clients.id'), nullable=False)
     
     lineItems = db.relationship('LineItem', cascade="all,delete", backref='order', lazy=True)
+
+    # def __init__(self, state='delivered' or 'canceled'): 
+    #     self.state = state + '!'
+
 
     def __repr__(self):
         return '<Order %r>' % self.total_price
@@ -229,7 +241,7 @@ class Order(db.Model):
     def save(self):
         db.session.add(self)
 
-class LineItem(db.Model):
+class LineItem(db.Model, ModelMixin):
     id= db.Column(db.Integer, primary_key=True)
     product_name = db.Column(db.String(250))
     quantity = db.Column(db.Integer)

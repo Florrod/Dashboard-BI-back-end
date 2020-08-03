@@ -11,13 +11,14 @@ from flask_wtf import FlaskForm
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, Enterprise, Brand, Integration, Platform, Clients, Order, LineItem
+from models import db, Enterprise, Brand, Integration, Platform, Clients, Order, LineItem, DatabaseManager
 from create_database import init_database
-from wrapper_justeat import WrapperJustEat
+from wrappers import Wrapper
 from login_form import MyForm
 from flask_bootstrap import Bootstrap
 from flask_jwt_extended import (JWTManager, jwt_required, create_access_token, get_raw_jwt, get_jwt_identity, create_refresh_token, jwt_refresh_token_required,get_jwt_identity)
 from decorators.admin_required_decorator import admin_required
+
 #from models import Person
 
 
@@ -36,15 +37,14 @@ setup_admin(app)
 
 @app.cli.command("syncapi")
 def syncapi():
-    integration = Integration(platform_id=1)
-    data= integration.getData()
-    WrapperJustEat.translateAndSave(data)
-    return 
-    integrations = Integration.query.all()
+    integrations = Integration.all()
     for integration in integrations:
-        data= integration.getData()
-        if (integration.platform.name == "JustEat"):
-            WrapperJustEat.translateAndSave(data)
+        data = integration.getData()
+        wrapper = Wrapper(integration)
+        order = wrapper.wrap(data)
+        order.addToDbSession()
+    DatabaseManager.commitDatabaseSessionPendingChanges()
+    return
 
 #Configuración JWT Flask Extended
 app.config['JWT_SECRET_KEY'] = 'super-secret'
