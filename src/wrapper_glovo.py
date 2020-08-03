@@ -14,8 +14,8 @@
 #                 total_price = total_price,
 #                 lineitems = lineitems,
 #                 client = client,
-#                 platform_id = self.integration.platform.id,
-#                 brand_id = self.integration.brand.id
+#                 platform_id = self.integration.platform_id,
+#                 brand_id = self.integration.brand_id
 #             )
 
 #             return order
@@ -33,25 +33,24 @@
 #         )
 
 
-#     def wrapClient(self,addressesJson) -> Clients: #Para el cliente recurrente y nuevo
+    def wrapClient(self,addressesJson) -> Clients: #Para el cliente recurrente y nuevo
 
-#         for address in addressesJson:
-#             if address['type'] == "DELIVERY":
-#                 phone= address['contactPhone']
+        for address in addressesJson:
+            if address['type'] == "DELIVERY":
+                phone= address['contactPhone']
         
-#                 client = Clients.getWithPhone(phone=phone)
-#                 if client == None:
-#                     client = Clients(
-#                         phone = phone,
-#                         orders_count = 1
-#                     )
+                client = Clients.getWithPhone(phone=phone)
+                if client == None:
+                    client = Clients(
+                        phone = phone,
+                        orders_count = 1
+                    )
 
-#                 else:
-#                     client.orders_count += 1
+                else:
+                    client.orders_count += 1
         
-#                 return client
-#         return None
-
+                return client
+        return None
     
 
 

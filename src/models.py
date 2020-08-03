@@ -154,8 +154,9 @@ class Integration(db.Model,ModelMixin):
 
 class Clients(db.Model,ModelMixin):
     id= db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(120), unique=True, nullable=True)
+    # email = db.Column(db.String(120), unique=True, nullable=True)
     orders_count = db.Column(db.Integer)
+    customer_id_justeat = db.Column(db.String(12), unique=True, nullable=True)
     phone= db.Column(db.String(12), unique=True, nullable=True)
 
     orders = db.relationship('Order', backref='clients', lazy=True)
@@ -168,7 +169,7 @@ class Clients(db.Model,ModelMixin):
     def serialize(self):
         return {
             "id": self.id,
-            "email": self.email,
+            # "email": self.email,
             "phone": self.phone,
             "orders": list(map(lambda x: x.serialize(), self.orders)),
             
@@ -179,12 +180,16 @@ class Clients(db.Model,ModelMixin):
 
     @classmethod
     def getWithEmail(cls, email):
-        return db.session.query(cls).filter_by(email=email).one_or_none()
+        # return db.session.query(cls).filter_by(email=email).one_or_none()
     # ¿classmethod?
 
     @classmethod
     def getWithPhone(cls, phone):
         return db.session.query(cls).filter_by(phone=phone).one_or_none()
+
+     @classmethod
+    def getWithCustomerId(cls, customer_id):
+        return db.session.query(cls).filter_by(id=id).one_or_none()
 
 
 class Order(db.Model):

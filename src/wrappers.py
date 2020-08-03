@@ -14,49 +14,6 @@ class Wrapper():
             raise APIException("Platform not supported")
         return wrapper.wrap(json)
 
-class WrapperJustEat(Wrapper):
-
-    def wrap(self, json) -> Order:
-        ordersJson = json['orders']
-        for orderJson in ordersJson:
-            lineitems, total_price = wrapLineItemsAndCalcTotalPrice(orderJson['lines'])
-            client = wrapClient(orderJson['client'])
-            order = Order(
-                total_price = total_price,
-                lineitems = lineitems,
-                client = wrapClient(orderJson['client']),
-                platform_id = self.integration.platform_id,
-                brand_id = self.integration.brand.id
-            )
-            return order
-    
-    def wrapLineItemsAndCalcTotalPrice(self, lineitemsJson):
-        total_price = 0
-        lineitems = []
-        for lineitemJson in lineitemsJson:
-            quantity = lineitemJson['quantity']
-            total_price += (lineitemJson['price'] * quantity)
-            lineitems.append(wrapLineItem(lineitemJson))
-        return lineitems, total_price
-
-    def wrapLineItem(self, lineitemJson) -> LineItem:
-        return LineItem(
-            product_name = lineitemJson['name'],
-            quantity = lineitemJson['quantity'],
-            price = lineitemJson['price']
-        )
-
-    def wrapClient(self,clientJson) -> Clients:
-        client = Clients.getWithEmail(email=clientJson['email'])
-        if client == None:
-            client = Clients(
-                email = clientJson['email'],
-                orders_count = 1
-            )
-        else:
-            client.orders_count += 1
-        return client
-
 class WrapperGlovo(Wrapper):
 
     def wrap(self,json) -> Order:
@@ -68,10 +25,10 @@ class WrapperGlovo(Wrapper):
 
             order = Order(
                 total_price = total_price,
-                lineitems = lineitems,
-                client = client,
+                lineItems = lineitems,
+                client_id = client,
                 platform_id = self.integration.platform_id,
-                brand_id = self.integration.brand.id
+                brand_id = self.integration.brand_id
             )
 
             return order
@@ -107,3 +64,56 @@ class WrapperGlovo(Wrapper):
         
                 return client
         return None
+
+class WrapperJustEat(Wrapper):
+
+    def wrap(self, json) -> Order:
+        for orderJson in json:
+
+            lineitems = wrapLineItems(orderJson['lines'])
+            total_price = orderJson['TotalPrice']
+            client = wrapClient(orderJson['Customer']['Id'])
+
+            order = Order(
+                total_price = total_price,
+                lineItems = lineitems,
+                client_id = client,
+                platform_id = self.integration.platform_id,
+                brand_id = self.integration.brand_id
+            )
+
+            return order
+
+            
+
+    def wrapLineItems(self,orderJson): #Para el producto más pedido
+        lineitems = []
+        lineitems.append(wrapLineItem(orderJson))
+        return lineitems
+
+    def wrapLineItem(self,orderJson) -> LineItem:
+        for lineItems in orderJson:
+            return LineItem(
+                product_name = orderJson['Items']['Name'],
+                quantity = orderJson['Items']['Quantity'],
+                price = orderJson['Items']['UnitPrice'] 
+            )
+
+    def wrapClient(self,customerJson) -> Clients: #Para el cliente recurrente y nuevo
+
+        customer_id= ['Customer']['Id']
+
+        client = Clients.getWithCustomerId(customer_id=customer_id)
+        if client == None:
+            client = Clients(
+                customer_id_justeat = customer_id,
+                orders_count = 1
+            )
+
+        else:
+            client.orders_count += 1
+
+        return client
+        
+    return None
+
