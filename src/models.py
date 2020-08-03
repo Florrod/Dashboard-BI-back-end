@@ -1,6 +1,12 @@
 from flask_sqlalchemy import SQLAlchemy
 import requests
 
+from sqlalchemy.orm import relationship
+from sqlalchemy import Column, ForeignKey, Integer, String
+from random import randint
+from flask_login import UserMixin
+from flask import jsonify
+
 db = SQLAlchemy()
 
 class DatabaseManager():
@@ -16,7 +22,8 @@ class ModelMixin():
     def all(cls):
         return cls.query.all()
 
-class Enterprise(db.Model):
+class Enterprise(db.Model, ModelMixin):
+
     id = db.Column(db.Integer, primary_key=True)
     CIF_number = db.Column(db.String(10), unique=True, nullable=True)
     name = db.Column(db.String(120), unique=True, nullable=True)
@@ -25,18 +32,10 @@ class Enterprise(db.Model):
     phone = db.Column(db.String(80),nullable=True)
     email = db.Column(db.String(120), unique=True, nullable=True)
     is_active = db.Column(db.Boolean, unique=False, nullable=False)
+    is_admin = db.Column(db.Boolean, unique=False, nullable=False)
 
     brand_id = db.relationship('Brand', cascade="all,delete", backref='enterprise', lazy=True)
-
-    # def __init__(self, CIF_number, name, password, address, phone, email, is_active):
-    #     self.CIF_number = CIF_number
-    #     self.name = name
-    #     self.password = password
-    #     self.address = address
-    #     self.phone = phone
-    #     self.email = email
-    #     self.is_active = is_active
-
+ 
     def __repr__(self):
         return '<Enterprise %r>' % self.name
     #__repr__ function should return a printable representation of the object, most likely one of the ways possible to create this object
@@ -45,6 +44,33 @@ class Enterprise(db.Model):
     #     db.session.add(self)
     #     db.session.commit
     #     return self -> devolver true o false si utilizamos está función ya que lo que quieres devolver es si la enterprise se a creado o no
+
+
+    @classmethod
+    def get_some_user_id(cls,user_id):
+        return cls.query.filter_by(id=user_id).one_or_none()
+
+    @staticmethod
+    def jsonifyArray(elements):
+        return jsonify(list(map(lambda element: element.serialize(), elements)))
+
+    def check_is_admin(self):
+        return self.is_admin #eres el administrador? Si es admin es true. Es una funcion/metodo de instancia. Necesitamos una instancia. Si lo hacemos con la clase directamente está mal.
+    
+    @classmethod
+    def getEnterpriseWithLoginCredentials(cls, email, password):
+        return db.session.query(cls).filter(Enterprise.email == email).filter(Enterprise.password == password).one_or_none()
+    
+    @classmethod
+    def get_user(cls, email, password):
+        user_find = cls.query.filter_by(email=email, password=password).one()
+        if user_find:
+            return user_find
+        else:
+            return None
+        
+    def __repr__(self):
+        return '<Enterprise %r>' % self.name
 
     def serialize(self):
         return {
@@ -56,23 +82,21 @@ class Enterprise(db.Model):
             "email": self.email,
             "is_active": self.is_active,
             "brand_id": list(map(lambda x: x.serialize(), self.brand_id)),
+            "is_admin": self.is_admin
             # linea nueva insertada debajo !
             # do not serialize the password, its a security breach
         }
 
-class Brand(db.Model):
+class Brand(db.Model,ModelMixin):
     id= db.Column(db.Integer, primary_key=True)
     name= db.Column(db.String(120), unique=True, nullable=True)
     logo= db.Column(db.String(120), nullable=True)
 
     enterprise_id = db.Column(db.Integer, db.ForeignKey('enterprise.id',ondelete='CASCADE', onupdate='CASCADE'),
         nullable=False)
+    
     integrations = db.relationship('Integration', cascade="all,delete", backref='brand', lazy=True)
     orders = db.relationship('Order', cascade="all,delete", backref='brand', lazy=True)
-
-    # def __init__(self, name, logo):
-    #     self.name = name
-    #     self.logo = logo
 
     def __repr__(self):
         return '<Brand %r>' % self.name
@@ -91,7 +115,7 @@ class Brand(db.Model):
     #     db.session.commit
     #     return self
 
-class Platform(db.Model):
+class Platform(db.Model, ModelMixin):
     id= db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), unique=True, nullable=True)
 
@@ -105,20 +129,17 @@ class Platform(db.Model):
         return {
             "id": self.id,
             "name": self.name,
-            "code": self.code,
             "integrations": list(map(lambda x: x.serialize(), self.integrations)),
-            "orders": list(map(lambda x: x.serialize(), self.orders)),
-
+            "orders": list(map(lambda x: x.serialize(), self.orders))
         }    
 
 class Integration(db.Model,ModelMixin):
     id= db.Column(db.Integer, primary_key=True)
     API_key= db.Column(db.String(120), nullable=True)
-    # deleted = db.Column(db.Boolean(), default=False) #¿Esto está bien? hay que incluirlo en serialize y cómo
-
     brand_id = db.Column(db.Integer, db.ForeignKey('brand.id', ondelete='CASCADE', onupdate='CASCADE'),
         nullable=False)
     platform_id = db.Column(db.Integer, db.ForeignKey('platform.id'), nullable=False)
+
     orders = db.relationship('Order', backref='integration', lazy=True)
     
     def __repr__(self):
@@ -150,8 +171,7 @@ class Integration(db.Model,ModelMixin):
         
         return None
     
-
-class Clients(db.Model,ModelMixin):
+class Clients(db.Model, ModelMixin):
     id= db.Column(db.Integer, primary_key=True)
     # email = db.Column(db.String(120), unique=True, nullable=True)
     orders_count = db.Column(db.Integer)
@@ -163,7 +183,7 @@ class Clients(db.Model,ModelMixin):
     #preguntar lo del campo calculado de quantity orders
 
     def __repr__(self):
-        return '<Clients %r>' % self.email
+        return '<Clients %r>' % self.id
 
     def serialize(self):
         return {
@@ -171,7 +191,6 @@ class Clients(db.Model,ModelMixin):
             # "email": self.email,
             "phone": self.phone,
             "orders": list(map(lambda x: x.serialize(), self.orders)),
-            
         } 
 
     def save(self):
@@ -190,20 +209,18 @@ class Clients(db.Model,ModelMixin):
     def getWithCustomerId(cls, customer_id):
         return db.session.query(cls).filter_by(id=id).one_or_none()
 
-
 class Order(db.Model):
     id= db.Column(db.Integer, primary_key=True)
     date = db.Column(db.String(250))
     total_price = db.Column(db.Float)
-    review = db.Column(db.Float)
     state = db.Column(db.String(250))
-
     platform_id = db.Column(db.Integer, db.ForeignKey('platform.id'), nullable=False)
     brand_id = db.Column(db.Integer, db.ForeignKey('brand.id', ondelete='CASCADE', onupdate='CASCADE'),
         nullable=False)
     integration_id= db.Column(db.Integer, db.ForeignKey('integration.id', ondelete='CASCADE', onupdate='CASCADE'),
         nullable=False)
     client_id = db.Column(db.Integer, db.ForeignKey('clients.id'), nullable=False)
+    
     lineItems = db.relationship('LineItem', cascade="all,delete", backref='order', lazy=True)
 
     # def __init__(self, state='delivered' or 'canceled'): 
@@ -224,7 +241,7 @@ class Order(db.Model):
     def save(self):
         db.session.add(self)
 
-class LineItem(db.Model):
+class LineItem(db.Model, ModelMixin):
     id= db.Column(db.Integer, primary_key=True)
     product_name = db.Column(db.String(250))
     quantity = db.Column(db.Integer)
