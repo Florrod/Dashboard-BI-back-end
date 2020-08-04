@@ -123,6 +123,20 @@ class Platform(db.Model, ModelMixin):
     integrations = db.relationship('Integration', backref='platform', lazy=True)
     orders = db.relationship('Order', backref='platform', lazy=True)
 
+    JUST_EAT_ID= 1
+    GLOVO_ID= 2
+
+    platforms = [
+        {
+            "id": JUST_EAT_ID,
+            "name": "Just Eat"
+        },
+        {
+            "id": GLOVO_ID,
+            "name": "Glovo"
+        }
+    ]
+
     def __repr__(self):
         return '<Platform %r>' % self.name
 
@@ -132,7 +146,23 @@ class Platform(db.Model, ModelMixin):
             "name": self.name,
             "integrations": list(map(lambda x: x.serialize(), self.integrations)),
             "orders": list(map(lambda x: x.serialize(), self.orders))
-        }    
+        }  
+
+    @classmethod
+    def getWithId(cls, id):
+        return db.session.query(cls).filter_by(id=id).one_or_none()
+
+    @classmethod
+    def seed(cls):
+        platforms=[]
+        for platform in cls.platforms:
+            platform_to_insert= Platform.getWithId(id=platform["id"])
+            if not platform_to_insert:
+                platform_to_insert= Platform(id=platform["id"],name=platform["name"])
+                platform_to_insert.addToDbSession()
+        DatabaseManager.commitDatabaseSessionPendingChanges()
+        return platforms
+
 
 class Integration(db.Model,ModelMixin):
     id= db.Column(db.Integer, primary_key=True)
@@ -271,3 +301,27 @@ class LineItem(db.Model, ModelMixin):
             "price": self.price,
             "order_id": self.order_id
         }
+
+
+class Product():
+    def __init__(self, name):
+        self.name=name
+
+    def serialize(self):
+        return {
+            "name": self.name
+        }
+
+    @staticmethod
+    def top_products_for_platform(platform_id):
+        products=[]
+        quantity_products= 5
+        rows= db.session.execute(
+            "SELECT product_name FROM line_item, order WHERE line_item . order_id = order . id AND order . platform_id = :platform_id GROUP BY product_name ORDER BY SUM(quantity) DESC LIMIT: quantity_products",
+            {"platform_id": platform_id, "quantity_products": quantity_products}
+        )
+        for row in rows:
+            print(row)
+            product= Product(name=row.product_name)
+            products.append(product)
+        return products

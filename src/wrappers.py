@@ -24,7 +24,7 @@ class WrapperGlovo(Wrapper):
         for orderJson in json:
 
             lineitems = self.wrapLineItems(orderJson)
-            total_price = orderJson['orderPrice']['amount']
+            total_price = (orderJson['orderPrice']['amount'])/100
             client = self.wrapClient(orderJson['addresses'])
             client.addToDbSession()
 
@@ -49,7 +49,7 @@ class WrapperGlovo(Wrapper):
         return LineItem(
             product_name = orderJson['description'],
             quantity = orderJson['quantity'],
-            price = orderJson['orderPrice']['amount'] / orderJson['quantity']
+            price = (orderJson['orderPrice']['amount'] / orderJson['quantity'])/100
         )
 
 

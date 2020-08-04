@@ -11,7 +11,7 @@ from flask_wtf import FlaskForm
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, Enterprise, Brand, Integration, Platform, Clients, Order, LineItem, DatabaseManager
+from models import db, Enterprise, Brand, Integration, Platform, Clients, Order, LineItem, DatabaseManager, Product
 from create_database import init_database
 from wrappers import Wrapper
 from login_form import MyForm
@@ -34,6 +34,15 @@ MIGRATE = Migrate(app, db)
 db.init_app(app)
 CORS(app)
 setup_admin(app)
+with app.app_context():
+    Platform.seed()
+
+@app.cli.command("seed_platform")
+def seed_platform():
+    platforms= Platform.seed()
+    for platform in platforms:
+        print("Platform created:", platform)
+
 
 @app.cli.command("syncapi")
 def syncapi():
@@ -136,6 +145,12 @@ def handle_invalid_usage(error):
 @app.route('/')
 def sitemap():
     return generate_sitemap(app)
+
+@app.route('/top-products/<int:platform_id>', methods=['GET'])
+def get_top_products(platform_id):
+    products= Product.top_products_for_platform(platform_id)
+    products= list(map(lambda product: product.serialize(), products))
+    return jsonify(products), 200
 
 #METODOS PARA ENTERPRISE
 
