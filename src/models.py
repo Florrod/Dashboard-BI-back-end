@@ -6,6 +6,7 @@ from sqlalchemy import Column, ForeignKey, Integer, String
 from random import randint
 from flask_login import UserMixin
 from flask import jsonify
+from json.decoder import JSONDecodeError
 
 db = SQLAlchemy()
 
@@ -167,7 +168,11 @@ class Integration(db.Model,ModelMixin):
         print("Response: ",response)
         if response.status_code == 200:
             # print(response.text)
-            return response.json()
+            try:
+                return response.json()
+            except JSONDecodeError as identifier:
+                print("Excepcion")
+                return None
         
         return None
     
@@ -175,10 +180,10 @@ class Clients(db.Model, ModelMixin):
     id= db.Column(db.Integer, primary_key=True)
     # email = db.Column(db.String(120), unique=True, nullable=True)
     orders_count = db.Column(db.Integer)
-    customer_id_justeat = db.Column(db.String(12), unique=True, nullable=True)
+    customer_id_platform = db.Column(db.String(12), unique=True, nullable=True)
     phone= db.Column(db.String(12), unique=True, nullable=True)
 
-    orders = db.relationship('Order', backref='clients', lazy=True)
+    orders = db.relationship("Order", back_populates="client")
 
     #preguntar lo del campo calculado de quantity orders
 
@@ -207,9 +212,14 @@ class Clients(db.Model, ModelMixin):
 
     @classmethod
     def getWithCustomerId(cls, customer_id):
-        return db.session.query(cls).filter_by(id=id).one_or_none()
+        return db.session.query(cls).filter_by(id=customer_id).one_or_none()
 
-class Order(db.Model):
+    @classmethod
+    def getWithCustomerPlatformId(cls, customer_platform_id):
+        return db.session.query(cls).filter_by(customer_id_platform=customer_platform_id).one_or_none()
+        
+
+class Order(db.Model, ModelMixin):
     id= db.Column(db.Integer, primary_key=True)
     date = db.Column(db.String(250))
     total_price = db.Column(db.Float)
@@ -220,6 +230,7 @@ class Order(db.Model):
     integration_id= db.Column(db.Integer, db.ForeignKey('integration.id', ondelete='CASCADE', onupdate='CASCADE'),
         nullable=False)
     client_id = db.Column(db.Integer, db.ForeignKey('clients.id'), nullable=False)
+    client = db.relationship("Clients", back_populates="orders")
     
     lineItems = db.relationship('LineItem', cascade="all,delete", backref='order', lazy=True)
 

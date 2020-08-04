@@ -1,11 +1,14 @@
 from utils import APIException
-from models import Order, LineItem, Clients, Brand, Platform
+from models import Order, LineItem, Clients, Brand, Platform, DatabaseManager 
+from typing import List
 
 class Wrapper():
 
     def __init__(self, integration):
-        self.integration = integration,
+        self.integration = integration
+
     def wrap(self, json) -> Order:
+        print(self.integration)
         if self.integration.platform_id == 1:
             wrapper = WrapperJustEat(self.integration)
         elif self.integration.platform_id == 2:
@@ -16,26 +19,30 @@ class Wrapper():
 
 class WrapperGlovo(Wrapper):
 
-    def wrap(self,json) -> Order:
+    def wrap(self,json) -> List[Order]:
+        orders = []
         for orderJson in json:
 
-            lineitems = wrapLineItems(orderJson['lines'])
+            lineitems = self.wrapLineItems(orderJson)
             total_price = orderJson['orderPrice']['amount']
-            client = wrapClient(orderJson['addresses'])
+            client = self.wrapClient(orderJson['addresses'])
+            client.addToDbSession()
 
             order = Order(
                 total_price = total_price,
                 lineItems = lineitems,
-                client_id = client,
+                client = client,
                 platform_id = self.integration.platform_id,
-                brand_id = self.integration.brand_id
+                brand_id = self.integration.brand_id,
+                integration_id = self.integration.id
             )
 
-            return order
+            orders.append(order)
+        return orders
     
     def wrapLineItems(self,orderJson): #Para el producto más pedido
         lineitems = []
-        lineitems.append(wrapLineItem(orderJson))
+        lineitems.append(self.wrapLineItem(orderJson))
         return lineitems
 
     def wrapLineItem(self,orderJson) -> LineItem:
@@ -67,46 +74,48 @@ class WrapperGlovo(Wrapper):
 
 class WrapperJustEat(Wrapper):
 
-    def wrap(self, json) -> Order:
+    def wrap(self, json) -> List[Order]:
+        orders = []
         for orderJson in json:
 
-            lineitems = wrapLineItems(orderJson['lines'])
+            lineitems = self.wrapLineItems(orderJson['Items'])
             total_price = orderJson['TotalPrice']
-            client = wrapClient(orderJson['Customer']['Id'])
+            client = self.wrapClient(orderJson['Customer'])
+            client.addToDbSession()
 
             order = Order(
                 total_price = total_price,
                 lineItems = lineitems,
-                client_id = client,
+                client = client,
                 platform_id = self.integration.platform_id,
-                brand_id = self.integration.brand_id
+                brand_id = self.integration.brand_id,
+                integration_id = self.integration.id
             )
+            orders.append(order)
+        return orders
+         
 
-            return order
-
-            
-
-    def wrapLineItems(self,orderJson): #Para el producto más pedido
+    def wrapLineItems(self,itemsJson): #Para el producto más pedido
         lineitems = []
-        lineitems.append(wrapLineItem(orderJson))
+        for itemJson in itemsJson:
+            lineitems.append(self.wrapLineItem(itemJson))
         return lineitems
 
-    def wrapLineItem(self,orderJson) -> LineItem:
-        for lineItems in orderJson:
-            return LineItem(
-                product_name = orderJson['Items']['Name'],
-                quantity = orderJson['Items']['Quantity'],
-                price = orderJson['Items']['UnitPrice'] 
-            )
+    def wrapLineItem(self,itemJson) -> LineItem:
+        return LineItem(
+            product_name = itemJson['Name'],
+            quantity = itemJson['Quantity'],
+            price = itemJson['UnitPrice'] 
+        )
 
     def wrapClient(self,customerJson) -> Clients: #Para el cliente recurrente y nuevo
 
-        customer_id= ['Customer']['Id']
+        customer_id= customerJson['Id']
 
-        client = Clients.getWithCustomerId(customer_id=customer_id)
+        client = Clients.getWithCustomerPlatformId(customer_platform_id=customer_id)
         if client == None:
             client = Clients(
-                customer_id_justeat = customer_id,
+                customer_id_platform = customer_id,
                 orders_count = 1
             )
 
@@ -114,6 +123,4 @@ class WrapperJustEat(Wrapper):
             client.orders_count += 1
 
         return client
-        
-        # return None
 

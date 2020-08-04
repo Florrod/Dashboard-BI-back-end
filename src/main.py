@@ -41,8 +41,9 @@ def syncapi():
     for integration in integrations:
         data = integration.getData()
         wrapper = Wrapper(integration)
-        order = wrapper.wrap(data)
-        order.addToDbSession()
+        orders = wrapper.wrap(data)
+        for order in orders:
+            order.addToDbSession()
     DatabaseManager.commitDatabaseSessionPendingChanges()
     return
 
