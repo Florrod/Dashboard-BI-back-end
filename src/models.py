@@ -6,6 +6,7 @@ from sqlalchemy import Column, ForeignKey, Integer, String
 from random import randint
 from flask_login import UserMixin
 from flask import jsonify
+from json.decoder import JSONDecodeError
 
 db = SQLAlchemy()
 
@@ -122,6 +123,20 @@ class Platform(db.Model, ModelMixin):
     integrations = db.relationship('Integration', backref='platform', lazy=True)
     orders = db.relationship('Order', backref='platform', lazy=True)
 
+    JUST_EAT_ID= 1
+    GLOVO_ID= 2
+
+    platforms = [
+        {
+            "id": JUST_EAT_ID,
+            "name": "Just Eat"
+        },
+        {
+            "id": GLOVO_ID,
+            "name": "Glovo"
+        }
+    ]
+
     def __repr__(self):
         return '<Platform %r>' % self.name
 
@@ -131,7 +146,23 @@ class Platform(db.Model, ModelMixin):
             "name": self.name,
             "integrations": list(map(lambda x: x.serialize(), self.integrations)),
             "orders": list(map(lambda x: x.serialize(), self.orders))
-        }    
+        }  
+
+    @classmethod
+    def getWithId(cls, id):
+        return db.session.query(cls).filter_by(id=id).one_or_none()
+
+    @classmethod
+    def seed(cls):
+        platforms=[]
+        for platform in cls.platforms:
+            platform_to_insert= Platform.getWithId(id=platform["id"])
+            if not platform_to_insert:
+                platform_to_insert= Platform(id=platform["id"],name=platform["name"])
+                platform_to_insert.addToDbSession()
+        DatabaseManager.commitDatabaseSessionPendingChanges()
+        return platforms
+
 
 class Integration(db.Model,ModelMixin):
     id= db.Column(db.Integer, primary_key=True)
@@ -167,7 +198,11 @@ class Integration(db.Model,ModelMixin):
         print("Response: ",response)
         if response.status_code == 200:
             # print(response.text)
-            return response.json()
+            try:
+                return response.json()
+            except JSONDecodeError as identifier:
+                print("Excepcion")
+                return None
         
         return None
     
@@ -175,10 +210,10 @@ class Clients(db.Model, ModelMixin):
     id= db.Column(db.Integer, primary_key=True)
     # email = db.Column(db.String(120), unique=True, nullable=True)
     orders_count = db.Column(db.Integer)
-    customer_id_justeat = db.Column(db.String(12), unique=True, nullable=True)
+    customer_id_platform = db.Column(db.String(12), unique=True, nullable=True)
     phone= db.Column(db.String(12), unique=True, nullable=True)
 
-    orders = db.relationship('Order', backref='clients', lazy=True)
+    orders = db.relationship("Order", back_populates="client")
 
     #preguntar lo del campo calculado de quantity orders
 
@@ -207,9 +242,14 @@ class Clients(db.Model, ModelMixin):
 
     @classmethod
     def getWithCustomerId(cls, customer_id):
-        return db.session.query(cls).filter_by(id=id).one_or_none()
+        return db.session.query(cls).filter_by(id=customer_id).one_or_none()
 
-class Order(db.Model):
+    @classmethod
+    def getWithCustomerPlatformId(cls, customer_platform_id):
+        return db.session.query(cls).filter_by(customer_id_platform=customer_platform_id).one_or_none()
+        
+
+class Order(db.Model, ModelMixin):
     id= db.Column(db.Integer, primary_key=True)
     date = db.Column(db.String(250))
     total_price = db.Column(db.Float)
@@ -220,6 +260,7 @@ class Order(db.Model):
     integration_id= db.Column(db.Integer, db.ForeignKey('integration.id', ondelete='CASCADE', onupdate='CASCADE'),
         nullable=False)
     client_id = db.Column(db.Integer, db.ForeignKey('clients.id'), nullable=False)
+    client = db.relationship("Clients", back_populates="orders")
     
     lineItems = db.relationship('LineItem', cascade="all,delete", backref='order', lazy=True)
 
@@ -260,3 +301,27 @@ class LineItem(db.Model, ModelMixin):
             "price": self.price,
             "order_id": self.order_id
         }
+
+
+class Product():
+    def __init__(self, name):
+        self.name=name
+
+    def serialize(self):
+        return {
+            "name": self.name
+        }
+
+    @staticmethod
+    def top_products_for_platform(platform_id):
+        products=[]
+        quantity_products= 5
+        rows= db.session.execute(
+            "SELECT product_name FROM line_item, order WHERE line_item . order_id = order . id AND order . platform_id = :platform_id GROUP BY product_name ORDER BY SUM(quantity) DESC LIMIT: quantity_products",
+            {"platform_id": platform_id, "quantity_products": quantity_products}
+        )
+        for row in rows:
+            print(row)
+            product= Product(name=row.product_name)
+            products.append(product)
+        return products
