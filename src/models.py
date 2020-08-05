@@ -247,7 +247,6 @@ class Clients(db.Model, ModelMixin):
     @classmethod
     def getWithCustomerPlatformId(cls, customer_platform_id):
         return db.session.query(cls).filter_by(customer_id_platform=customer_platform_id).one_or_none()
-        
 
 class Order(db.Model, ModelMixin):
     id= db.Column(db.Integer, primary_key=True)
@@ -317,9 +316,9 @@ class Product():
         products=[]
         quantity_products= 5
         rows= db.session.execute(
-            "SELECT product_name FROM line_item, order WHERE line_item . order_id = order . id AND order . platform_id = :platform_id GROUP BY product_name ORDER BY SUM(quantity) DESC LIMIT: quantity_products",
-            {"platform_id": platform_id, "quantity_products": quantity_products}
+            f"select line_item.product_name, `order`.platform_id,line_item.quantity from line_item, `order` where line_item.order_id = `order`.id and `order`.platform_id = {platform_id} order by line_item.quantity desc limit {quantity_products}"
         )
+
         for row in rows:
             print(row)
             product= Product(name=row.product_name)

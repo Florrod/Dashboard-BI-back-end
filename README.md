@@ -72,3 +72,17 @@ $ heroku create <your_application_name>
 $ git push heroku master
 ```
 :warning: For a more detailed explanation on working with .env variables or the MySQL database [read the full guide](https://github.com/4GeeksAcademy/flask-rest-hello/blob/master/docs/DEPLOY_YOUR_APP.md).
+
+Para top productos por plataforma
+select line_item.product_name, `order`.platform_id,line_item.quantity from line_item, `order` where line_item.order_id = `order`.id and `order`.platform_id = 1 order by line_item.quantity desc limit 5;
+
+Para clientes recurrentes por plataforma 1
+select clients.phone, clients.orders_count,`order`.platform_id from clients,`order` where `order`.platform_id = 1 order by clients.orders_count desc limit 5;
+
+Para clientes recurrentes por plataforma 2
+select clients.customer_id_platform, clients.orders_count,`order`.platform_id from clients,`order` where `order`.platform_id = 2 order by clients.orders_count desc limit 5;
+
+Para ventas totales por plataforma
+select round(sum(`order`.total_price)), `order`.platform_id from `order` group by `order`.platform_id;
+
+
