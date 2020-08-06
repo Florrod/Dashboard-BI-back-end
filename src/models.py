@@ -303,15 +303,13 @@ class LineItem(db.Model, ModelMixin):
 
 
 class Product():
-    def __init__(self, name):
-        # self.platform_id= platform_id,
-        # self.platform_name = platform_name,
-        self.name=name,
+    name = ""
+
+    def __init__(self, product_name):
+        self.name = product_name,
 
     def serialize(self):
         return {
-            # "platform_id": self.platform_id,
-            # "platform_name": self.platform_name,
             "name": self.name
         }
 
@@ -324,12 +322,9 @@ class Product():
         )
 
         for row in rows:
-            print("hola soy el pedido",row)
-            print("hola soy product_name",row["product_name"])
-            product= Product(
-                # platform_id=row.platform_id,
-                # platform_name=row.name,
-                name=row["product_name"]
-            )
+            product_name = row["product_name"]
+            print("Product name: ", product_name)
+            product = {"name": product_name}
+            print("New product", product["name"])
             products.append(product)
         return products

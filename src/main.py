@@ -147,9 +147,21 @@ def sitemap():
 
 @app.route('/top-products/<int:platform_id>', methods=['GET'])
 def get_top_products(platform_id):
-    products= Product.top_products_for_platform(platform_id)
-    products= list(map(lambda product: product.serialize(), products))
-    return jsonify(products), 200
+    platforms = Platform.all()
+    response = []
+    for platform in platforms:
+        products = Product.top_products_for_platform(platform.id)
+        response.append(
+            {
+                "id": platform.id,
+                "name": platform.name,
+                "top_products": products
+            }
+        )
+
+    
+    #products = list(map(lambda product: product, products))
+    return jsonify(response), 200
 
 #METODOS PARA ENTERPRISE
 
