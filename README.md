@@ -76,6 +76,15 @@ $ git push heroku master
 Para top productos por plataforma
 select line_item.product_name, `order`.platform_id,line_item.quantity from line_item, `order` where line_item.order_id = `order`.id and `order`.platform_id = 1 order by line_item.quantity desc limit 5;
 
+Para top productos por plataforma con product_name
+select line_item.product_name
+from line_item, `order`,platform 
+where `order`.platform_id = platform.id 
+and line_item.order_id = `order`.id 
+and `order`.platform_id = 1 
+group by product_name
+order by sum(line_item.quantity) desc limit 5;
+
 Para clientes recurrentes por plataforma 1
 select clients.phone, clients.orders_count,`order`.platform_id from clients,`order` where `order`.platform_id = 1 order by clients.orders_count desc limit 5;
 
