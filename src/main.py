@@ -34,8 +34,7 @@ MIGRATE = Migrate(app, db)
 db.init_app(app)
 CORS(app)
 setup_admin(app)
-with app.app_context():
-    Platform.seed()
+
 
 @app.cli.command("seed_platform")
 def seed_platform():

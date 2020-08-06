@@ -117,7 +117,7 @@ class Brand(db.Model,ModelMixin):
     #     return self
 
 class Platform(db.Model, ModelMixin):
-    id= db.Column(db.Integer, primary_key=True)
+    id= db.Column(db.Integer, primary_key=True, autoincrement=False)
     name = db.Column(db.String(120), unique=True, nullable=True)
 
     integrations = db.relationship('Integration', backref='platform', lazy=True)
