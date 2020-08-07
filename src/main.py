@@ -145,6 +145,10 @@ def handle_invalid_usage(error):
 def sitemap():
     return generate_sitemap(app)
 
+#QUERYS
+
+#TOP PRODUCTS
+
 @app.route('/top-products', methods=['GET'])
 def get_top_products():
     platforms = Platform.all()
@@ -156,6 +160,43 @@ def get_top_products():
                 "id": platform.id,
                 "name": platform.name,
                 "top_products": list(map(lambda product: product.serialize(), products))
+            }
+        )
+    return jsonify(response), 200
+
+#RECURRENT CLIENTS
+
+@app.route('/recurrent-clients', methods=['GET'])
+def get_recurrent_clients():
+    platforms = Platform.all()
+    response = []
+    for platform in platforms:
+        recurrent_clients = Clients.recurrent_clients_for_platform(platform.id)
+        response.append(
+            {
+                "id": platform.id,
+                "name": platform.name,
+                #Meter en orders_count el array de recurrent_clients parece raro, orders count pide un entero y recurrent_clientes parece un array
+                "orders_count": list(map(lambda recurrent_client: recurrent_client.serialize(), recurrent_clients))
+            }
+        )
+    return jsonify(response), 200
+
+# TOTAL SALES
+
+@app.route('/total-sales', methods=['GET'])
+def get_total_sales():
+    platforms = Platform.all()
+    response = []
+    for platform in platforms:
+        total_sales = Order.total_sales_for_platform(platform.id)
+        print(total_sales)
+        response.append(
+            {
+                "id": platform.id,
+                "name": platform.name,
+                "total_price": total_sales
+                # "total_price": list(map(lambda total_sale: total_sale.serialize(), total_sales))
             }
         )
     return jsonify(response), 200

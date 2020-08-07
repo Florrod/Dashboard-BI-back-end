@@ -248,6 +248,23 @@ class Clients(db.Model, ModelMixin):
     def getWithCustomerPlatformId(cls, customer_platform_id):
         return db.session.query(cls).filter_by(customer_id_platform=customer_platform_id).one_or_none()
 
+    @staticmethod
+    def recurrent_clients_for_platform(platform_id):
+        recurrent_clients=[]
+        quantity_clients= 1
+        rows= db.session.execute(
+            f"select clients.orders_count, clients.phone, clients.customer_id_platform from clients,`order`, platform where `order`.platform_id = platform.id and `order`.platform_id = {platform_id} order by clients.orders_count desc limit {quantity_clients};"
+        )
+        for row in rows:
+            phone= row["phone"]
+            customer_id_platform= row["customer_id_platform"]
+            orders_count = row["orders_count"]
+            #Estamos creando un cliente pocho, deberiamos como minimo hacer que sea obligatorio al crear un cliente que tenga un identificador único como puede ser un email o un telefono.
+            recurrent_client = Clients(orders_count=orders_count, phone=phone, customer_id_platform=customer_id_platform)
+            recurrent_clients.append(recurrent_client)
+            
+        return recurrent_clients
+
 class Order(db.Model, ModelMixin):
     id= db.Column(db.Integer, primary_key=True)
     date = db.Column(db.String(250))
@@ -278,8 +295,32 @@ class Order(db.Model, ModelMixin):
             "lineItems": self.lineItems,
             "brand_id": self.brand_id
         }
+
     def save(self):
         db.session.add(self)
+
+    @staticmethod
+    def total_sales_for_platform(platform_id):
+        print ("Holaaaaa platform", platform_id)
+        total_sales= 0
+        sales_result = db.session.query(
+            Order.platform_id,
+            db.func.sum(Order.total_price).label('total'))\
+        .filter(Order.platform_id == platform_id)\
+        .all()
+        print("TOTAL", sales_result)
+
+        return sales_result[0][1]
+
+         # rows= db.session.execute(
+        #     f"select round(sum(`order`.total_price)) as total, `order`.platform_id from `order` where `order`.id = {platform_id};"
+        # ) 
+        # for row in rows:
+        #     print ("--->", dict(row))
+        #     items = row.items()
+        #     print("items",items)
+        #     total_sales = items[0]
+        
 
 class LineItem(db.Model, ModelMixin):
     id= db.Column(db.Integer, primary_key=True)
@@ -324,3 +365,5 @@ class Product():
             products.append(product)
             
         return products
+
+    

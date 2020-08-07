@@ -88,6 +88,10 @@ order by sum(line_item.quantity) desc limit 5;
 Para clientes recurrentes por plataforma 1
 select clients.phone, clients.orders_count,`order`.platform_id from clients,`order` where `order`.platform_id = 1 order by clients.orders_count desc limit 5;
 
+select clients.orders_count from clients,`order`, platform where `order`.platform_id = platform.id and clients.orders_count = orders_count and `order`.platform_id = 2 order by clients.orders_count desc limit 5;
+
+select clients.orders_count, clients.phone, clients.customer_id_platform, platform.id from clients,`order`, platform where `order`.platform_id = 2 group by `order`.platform_id order by clients.orders_count desc limit 1;
+
 Para clientes recurrentes por plataforma 2
 select clients.customer_id_platform, clients.orders_count,`order`.platform_id from clients,`order` where `order`.platform_id = 2 order by clients.orders_count desc limit 5;
 
