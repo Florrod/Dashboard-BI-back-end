@@ -145,8 +145,8 @@ def handle_invalid_usage(error):
 def sitemap():
     return generate_sitemap(app)
 
-@app.route('/top-products/<int:platform_id>', methods=['GET'])
-def get_top_products(platform_id):
+@app.route('/top-products', methods=['GET'])
+def get_top_products():
     platforms = Platform.all()
     response = []
     for platform in platforms:
@@ -155,12 +155,9 @@ def get_top_products(platform_id):
             {
                 "id": platform.id,
                 "name": platform.name,
-                "top_products": products
+                "top_products": list(map(lambda product: product.serialize(), products))
             }
         )
-
-    
-    #products = list(map(lambda product: product, products))
     return jsonify(response), 200
 
 #METODOS PARA ENTERPRISE

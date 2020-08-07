@@ -304,10 +304,8 @@ class LineItem(db.Model, ModelMixin):
 
 class Product():
     name = ""
-
-    def __init__(self, product_name):
-        self.name = product_name,
-
+    def __init__(self, name):
+        self.name = name
     def serialize(self):
         return {
             "name": self.name
@@ -320,11 +318,9 @@ class Product():
         rows= db.session.execute(
             f"select line_item.product_name from line_item, `order`,platform where `order`.platform_id = platform.id and line_item.order_id =`order`.id and `order`.platform_id = {platform_id} group by product_name order by sum(line_item.quantity) desc limit {quantity_products};"
         )
-
         for row in rows:
             product_name = row["product_name"]
-            print("Product name: ", product_name)
-            product = {"name": product_name}
-            print("New product", product["name"])
+            product = Product(name=product_name)
             products.append(product)
+            
         return products
