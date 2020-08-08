@@ -222,10 +222,10 @@ class Clients(db.Model, ModelMixin):
 
     def serialize(self):
         return {
-            "id": self.id,
             # "email": self.email,
             "phone": self.phone,
-            "orders": list(map(lambda x: x.serialize(), self.orders)),
+            "customer_id_platform": self.customer_id_platform,
+            "orders_count": self.orders_count
         } 
 
     def save(self):
@@ -253,8 +253,9 @@ class Clients(db.Model, ModelMixin):
         recurrent_clients=[]
         quantity_clients= 1
         rows= db.session.execute(
-            f"select clients.orders_count, clients.phone, clients.customer_id_platform from clients,`order`, platform where `order`.platform_id = platform.id and `order`.platform_id = {platform_id} order by clients.orders_count desc limit {quantity_clients};"
+            f"select clients.orders_count, clients.phone, clients.customer_id_platform from clients,`order`, platform where `order`.platform_id = platform.id and `order`.platform_id = {platform_id} and `order`.client_id = clients.id order by clients.orders_count desc limit {quantity_clients};"
         )
+        
         for row in rows:
             phone= row["phone"]
             customer_id_platform= row["customer_id_platform"]

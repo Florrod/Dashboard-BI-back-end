@@ -109,7 +109,7 @@ def refresh():
     return jsonify(ret), 200
 
 @app.route('/logout', methods=['DELETE'])
-@jwt_required
+@jwt_required #el front end necesita la cabecera de autorización cada vez que haya un jwt required
 def logout():
     jti = get_raw_jwt()['jti']
     blacklist.add(jti)
@@ -150,6 +150,7 @@ def sitemap():
 #TOP PRODUCTS
 
 @app.route('/top-products', methods=['GET'])
+@jwt_required
 def get_top_products():
     platforms = Platform.all()
     response = []
@@ -167,6 +168,7 @@ def get_top_products():
 #RECURRENT CLIENTS
 
 @app.route('/recurrent-clients', methods=['GET'])
+@jwt_required
 def get_recurrent_clients():
     platforms = Platform.all()
     response = []
@@ -185,6 +187,7 @@ def get_recurrent_clients():
 # TOTAL SALES
 
 @app.route('/total-sales', methods=['GET'])
+@jwt_required
 def get_total_sales():
     platforms = Platform.all()
     response = []
