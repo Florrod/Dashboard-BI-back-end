@@ -23,6 +23,10 @@ class ModelMixin():
     def all(cls):
         return cls.query.all()
 
+    @classmethod
+    def get_some_user_id(cls,user_id):
+        return cls.query.filter_by(id=user_id).one_or_none()
+
 class Enterprise(db.Model, ModelMixin):
 
     id = db.Column(db.Integer, primary_key=True)
@@ -92,7 +96,6 @@ class Brand(db.Model,ModelMixin):
     id= db.Column(db.Integer, primary_key=True)
     name= db.Column(db.String(120), unique=True, nullable=True)
     logo= db.Column(db.String(120), nullable=True)
-
     enterprise_id = db.Column(db.Integer, db.ForeignKey('enterprise.id',ondelete='CASCADE', onupdate='CASCADE'),
         nullable=False)
     
@@ -108,8 +111,8 @@ class Brand(db.Model,ModelMixin):
             "name": self.name,
             "logo": self.logo,
             "enterprise_id": self.enterprise_id,
-            "integrations": list(map(lambda x: x.serialize(), self.integrations)),
-            "orders": list(map(lambda x: x.serialize(), self.orders)), # lo podríamos quitar ya que en este endpoint no nos interesan las orders. Iriamos a orders para verlas
+            # "integrations": list(map(lambda x: x.serialize(), self.integrations)),
+            # "orders": list(map(lambda x: x.serialize(), self.orders)), # lo podríamos quitar ya que en este endpoint no nos interesan las orders. Iriamos a orders para verlas
         }
     # def save(self):
     #     db.session.add(self)
@@ -293,7 +296,7 @@ class Order(db.Model, ModelMixin):
             "id": self.id,
             "date": self.date,
             "total_price": self.total_price,
-            "lineItems": self.lineItems,
+            "lineItems": list(map(lambda x: x.serialize(), self.lineItems)),
             "brand_id": self.brand_id
         }
 

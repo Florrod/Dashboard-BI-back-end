@@ -300,11 +300,33 @@ def get_all_brand():
     brands = list(map(lambda brand: brand.serialize(), all_brand))
     return jsonify(brands),200
 
+
+@app.route('/enterprise/<int:id>/brands', methods=['GET'])
+@jwt_required
+def get_enterprise_with_brands(id):
+    current_enterprise_id = get_jwt_identity() #la empresa que me han pedido
+    current_enterprise_logged = Enterprise.get_some_user_id(current_enterprise_id)
+    brand = Brand.query.filter_by(id=current_enterprise_id)
+    if current_enterprise_logged.check_is_admin() or current_enterprise_id == id:
+        enterprise = Enterprise.get_some_user_id(id)
+        enterpriseSerialized = enterprise.serialize()
+        enterpriseSerialized["brand_id"] = list(map(lambda brand: brand.serialize(), enterprise.brand_id))
+        return jsonify(enterpriseSerialized)
+    else:
+        return jsonify({'msg': 'Access denied'}), 400
+
+
+
 @app.route('/enterprise/brand/<int:id>', methods=['GET'])
 @jwt_required
 def get_single_brand(id):
-    single_brand =Brand.query.filter_by(id=id).first_or_404()
-    return jsonify(single_brand.serialize()),200
+    current_brand_id = get_jwt_identity()
+    current_brand_logged = Brand.get_some_user_id(current_brand_id)
+    if current_brand_id == id:
+        return jsonify(Brand.get_some_user_id(id).serialize()),200
+    else:
+        return jsonify({'msg': 'Access denied'}), 400
+    
 
 @app.route('/enterprise/brand', methods=['POST'])
 @jwt_required
