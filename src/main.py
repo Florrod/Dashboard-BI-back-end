@@ -301,21 +301,25 @@ def get_all_brand():
     return jsonify(brands),200
 
 
-@app.route('/enterprise/<int:id>/brands', methods=['GET'])
+@app.route('/enterprise/brands', methods=['GET'])
 @jwt_required
-def get_enterprise_with_brands(id):
-    current_enterprise_id = get_jwt_identity() #la empresa que me han pedido
+def get_enterprise_with_brands():
+    enterprises_with_brands = [] #queremos devolver un array de empresas tanto en el admin como en el resto de usuarios
+    current_enterprise_id = get_jwt_identity() #cogemos el ID de la empresa que esta loggeada, si es admin queremos todas las empresas-> comprobación
     current_enterprise_logged = Enterprise.get_some_user_id(current_enterprise_id)
-    brand = Brand.query.filter_by(id=current_enterprise_id)
-    if current_enterprise_logged.check_is_admin() or current_enterprise_id == id:
-        enterprise = Enterprise.get_some_user_id(id)
-        enterpriseSerialized = enterprise.serialize()
-        enterpriseSerialized["brand_id"] = list(map(lambda brand: brand.serialize(), enterprise.brand_id))
-        return jsonify(enterpriseSerialized)
+    #comprobación : si es admin, nos devuleve todas las empresas, sino, la empresa del usuario loggeado
+    if (current_enterprise_logged.check_is_admin()):
+        enterprises = Enterprise.all()
     else:
-        return jsonify({'msg': 'Access denied'}), 400
+        enterprises = [current_enterprise_logged]
 
-
+    for enterprise in enterprises:
+        enterpriseSerialized = enterprise.serialize()
+        enterpriseSerialized["brand_id"] = list(map(lambda brand: brand.serialize(), enterprise.brand_id)) #serializamos las brands y las vamos metiendo en el array de la empresa que tenemos serializada
+        enterprises_with_brands.append(enterpriseSerialized)
+        
+    return jsonify(enterprises_with_brands)
+    
 
 @app.route('/enterprise/brand/<int:id>', methods=['GET'])
 @jwt_required
