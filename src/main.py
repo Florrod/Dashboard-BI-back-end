@@ -19,10 +19,8 @@ from flask_bootstrap import Bootstrap
 from flask_jwt_extended import (JWTManager, jwt_required, create_access_token, get_raw_jwt, get_jwt_identity, create_refresh_token, jwt_refresh_token_required,get_jwt_identity)
 from decorators.admin_required_decorator import admin_required
 
-#from models import Person
-
-
 app = Flask(__name__)
+
 Bootstrap(app)
 app.url_map.strict_slashes = False
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DB_CONNECTION_STRING')
@@ -221,6 +219,7 @@ def get_all_enterprises():
     #     return jsonify(enterprises),200
 
 @app.route('/enterprise/<int:id>', methods=['GET'])
+
 @jwt_required
 def get_single_enterprise(id):
     current_enterprise_id = get_jwt_identity() #la empresa que me han pedido
@@ -250,12 +249,24 @@ def delete_single_enterprise(id):
     else:
         return jsonify({'msg': 'Access denied'}), 400
 
-@app.route('/enterprise/<int:id>', methods=['PUT'])
-@jwt_required
-@admin_required
-def update_enterprise(user, id):
+@app.route('/enterprises/<int:id>/update', methods=['POST'])
+def update_enterprise_top(id):
     body = request.get_json()
-    update_single_enterprise =Enterprise.query.filter_by(id=body['id']).first_or_404()
+    update_single_enterprise =Enterprise.query.filter_by(id=id).first_or_404()
+    update_single_enterprise.CIF_number = body['CIF_number']
+    update_single_enterprise.name = body['name']
+    update_single_enterprise.password = body['password']
+    update_single_enterprise.address = body['address']
+    update_single_enterprise.phone = body['phone']
+    update_single_enterprise.email = body['email']
+    update_single_enterprise.is_active = body['is_active']
+    db.session.commit()
+    return jsonify(update_single_enterprise.serialize()),200
+
+@app.route('/enterprise/<int:id>/edit', methods=['POST'])
+def update_enterprise(id):
+    body = request.get_json()
+    update_single_enterprise =Enterprise.query.filter_by(id=id).first_or_404()
     update_single_enterprise.CIF_number = body['CIF_number']
     update_single_enterprise.name = body['name']
     update_single_enterprise.password = body['password']
