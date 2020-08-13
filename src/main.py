@@ -249,7 +249,7 @@ def delete_single_enterprise(id):
     else:
         return jsonify({'msg': 'Access denied'}), 400
 
-@app.route('/enterprises/<int:id>/update', methods=['POST'])
+@app.route('/enterprise/<int:id>', methods=['PUT'])
 def update_enterprise_top(id):
     body = request.get_json()
     update_single_enterprise =Enterprise.query.filter_by(id=id).first_or_404()
