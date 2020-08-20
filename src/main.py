@@ -252,10 +252,13 @@ def delete_single_enterprise(id):
 @app.route('/enterprise/<int:id>', methods=['PUT'])
 def update_enterprise_top(id):
     body = request.get_json()
+    print("aaaaaaaaaaa ->", body)
     update_single_enterprise =Enterprise.query.filter_by(id=id).first_or_404()
     update_single_enterprise.CIF_number = body['CIF_number']
     update_single_enterprise.name = body['name']
-    update_single_enterprise.password = body['password']
+    key_to_lookup = 'password'
+    if key_to_lookup in body and body['password'] != "":
+        update_single_enterprise.password = body['password']
     update_single_enterprise.address = body['address']
     update_single_enterprise.phone = body['phone']
     update_single_enterprise.email = body['email']

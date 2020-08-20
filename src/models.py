@@ -87,7 +87,7 @@ class Enterprise(db.Model, ModelMixin):
             "email": self.email,
             "is_active": self.is_active,
             "brand_id": list(map(lambda x: x.serialize(), self.brand_id)),
-            "is_admin": self.is_admin
+            "is_admin": self.is_admin,
             # linea nueva insertada debajo !
             # do not serialize the password, its a security breach
         }
