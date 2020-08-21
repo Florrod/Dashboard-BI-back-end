@@ -36,7 +36,7 @@ class Enterprise(db.Model, ModelMixin):
     address = db.Column(db.String(120),nullable=True)
     phone = db.Column(db.String(80),nullable=True)
     email = db.Column(db.String(120), unique=True, nullable=True)
-    is_active = db.Column(db.Boolean, unique=False, nullable=False)
+    is_active = db.Column(db.Boolean, unique=False, nullable=False, default=True)
     is_admin = db.Column(db.Boolean, unique=False, nullable=False)
 
     brand_id = db.relationship('Brand', cascade="all,delete", backref='enterprise', lazy=True)

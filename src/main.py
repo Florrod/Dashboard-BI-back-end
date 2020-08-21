@@ -202,6 +202,32 @@ def get_total_sales():
         )
     return jsonify(response), 200
 
+#ENDPOINT AÑADIR EMPRESA
+@app.route('/add-enterprise', methods=['POST'])
+@jwt_required
+def add_new_enterprise_form():
+    body = request.get_json()
+    new_enterprise_form= Enterprise(CIF_number=body['CIF_number'], name=body['name'], password=body['password'], address=body['address'], phone=body['phone'], email=body['email'], is_admin=body['is_admin'])
+    db.session.add(new_enterprise_form)
+    db.session.commit()
+    # enterprise_id = new_enterprise_form.id
+    print("aaaaaa ->", new_enterprise_form.id)
+    new_brand_form = Brand(name=body['name'], logo=body['logo'], enterprise_id= new_enterprise_form.id)
+    db.session.add(new_brand_form)
+    db.session.commit()
+    print(new_brand_form.id)
+    print("aaa-Z", body['API_key'])
+    if body['API_key']['JE'] != "":
+        new_integration_form_JE= Integration(API_key=body['API_key']['JE'], brand_id=new_brand_form.id, platform_id=1)
+        db.session.add(new_integration_form_JE)
+    if body['API_key']['GL'] != "":
+        new_integration_form_GL= Integration(API_key=body['API_key']['GL'], brand_id=new_brand_form.id, platform_id=2)
+        db.session.add(new_integration_form_GL)
+    db.session.commit()
+    return jsonify(new_enterprise_form.serialize()), 200
+
+
+
 #METODOS PARA ENTERPRISE
 
 @app.route('/enterprise', methods=['GET'])
@@ -266,19 +292,19 @@ def update_enterprise_top(id):
     db.session.commit()
     return jsonify(update_single_enterprise.serialize()),200
 
-@app.route('/enterprise/<int:id>/edit', methods=['POST'])
-def update_enterprise(id):
-    body = request.get_json()
-    update_single_enterprise =Enterprise.query.filter_by(id=id).first_or_404()
-    update_single_enterprise.CIF_number = body['CIF_number']
-    update_single_enterprise.name = body['name']
-    update_single_enterprise.password = body['password']
-    update_single_enterprise.address = body['address']
-    update_single_enterprise.phone = body['phone']
-    update_single_enterprise.email = body['email']
-    update_single_enterprise.is_active = body['is_active']
-    db.session.commit()
-    return jsonify(update_single_enterprise.serialize()),200
+# @app.route('/enterprise/<int:id>/edit', methods=['POST'])
+# def update_enterprise(id):
+#     body = request.get_json()
+#     update_single_enterprise =Enterprise.query.filter_by(id=id).first_or_404()
+#     update_single_enterprise.CIF_number = body['CIF_number']
+#     update_single_enterprise.name = body['name']
+#     update_single_enterprise.password = body['password']
+#     update_single_enterprise.address = body['address']
+#     update_single_enterprise.phone = body['phone']
+#     update_single_enterprise.email = body['email']
+#     update_single_enterprise.is_active = body['is_active']
+#     db.session.commit()
+#     return jsonify(update_single_enterprise.serialize()),200
 
 @app.route('/enterprise', methods=['POST'])
 @jwt_required
