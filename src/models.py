@@ -111,7 +111,7 @@ class Brand(db.Model,ModelMixin):
             "name": self.name,
             "logo": self.logo,
             "enterprise_id": self.enterprise_id,
-            # "integrations": list(map(lambda x: x.serialize(), self.integrations)),
+            "integrations": list(map(lambda x: x.serialize(), self.integrations)),
             # "orders": list(map(lambda x: x.serialize(), self.orders)), # lo podríamos quitar ya que en este endpoint no nos interesan las orders. Iriamos a orders para verlas
         }
     # def save(self):

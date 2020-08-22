@@ -207,12 +207,12 @@ def get_total_sales():
 @jwt_required
 def add_new_enterprise_form():
     body = request.get_json()
-    new_enterprise_form= Enterprise(CIF_number=body['CIF_number'], name=body['name'], password=body['password'], address=body['address'], phone=body['phone'], email=body['email'], is_admin=body['is_admin'])
+    new_enterprise_form= Enterprise(CIF_number=body['CIF_number'], name=body['enterprise_name'], password=body['password'], address=body['address'], phone=body['phone'], email=body['email'], is_admin=body['is_admin'])
     db.session.add(new_enterprise_form)
     db.session.commit()
     # enterprise_id = new_enterprise_form.id
     print("aaaaaa ->", new_enterprise_form.id)
-    new_brand_form = Brand(name=body['name'], logo=body['logo'], enterprise_id= new_enterprise_form.id)
+    new_brand_form = Brand(name=body['brand_name'], logo=body['logo'], enterprise_id= new_enterprise_form.id)
     db.session.add(new_brand_form)
     db.session.commit()
     print(new_brand_form.id)
@@ -384,7 +384,6 @@ def get_enterprise_with_brands():
         
     return jsonify(enterprises_with_brands)
     
-
 @app.route('/enterprise/brand/<int:id>', methods=['GET'])
 @jwt_required
 def get_single_brand(id):
@@ -416,7 +415,25 @@ def update_brand(brand_id):
     update_single_brand.name = body['name']
     update_single_brand.logo = body['logo']
     db.session.commit()
+
     return jsonify(update_single_brand.serialize()),200
+
+@app.route('/edit-brand/<int:id>', methods=['PUT'])
+@jwt_required
+def edit_brand_form(id):
+    body = request.get_json()
+    update_brand =Brand.query.filter_by(id=body['id']).first_or_404()
+    print("aaaaaa ->", update_brand.id)
+    update_brand.name = body['name']
+    update_brand.logo = body['logo']
+    db.session.commit()
+    print("aaa-Z", body['API_key'])
+    if body['API_key']['JE'] != "":
+        update_integration_form_JE= Integration(API_key=body['API_key']['JE'], brand_id=update_brand.id, platform_id=1)
+    if body['API_key']['GL'] != "":
+        update_integration_form_GL= Integration(API_key=body['API_key']['GL'], brand_id=update_brand.id, platform_id=2)
+    db.session.commit()
+    return jsonify(update_brand.serialize()), 200
 
 @app.route('/enterprise/brand/<int:id>', methods=['DELETE'])
 @jwt_required
