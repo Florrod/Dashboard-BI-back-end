@@ -226,6 +226,30 @@ def add_new_enterprise_form():
     db.session.commit()
     return jsonify(new_enterprise_form.serialize()), 200
 
+#ENDPOINT AÑADIR BRAND
+@app.route('/add-brand', methods=['POST'])
+@jwt_required
+def add_new_brand_form():
+    body = request.get_json()
+    current_enterprise_id = get_jwt_identity()
+    current_enterprise_logged = Enterprise.get_some_user_id(current_enterprise_id)
+    db.session.add(current_enterprise_logged)
+    db.session.commit()
+    print("aaaaaa ->", current_enterprise_logged.id)
+    new_brand_form = Brand(name=body['name'], logo=body['logo'], enterprise_id= current_enterprise_logged.id)
+    db.session.add(new_brand_form)
+    db.session.commit()
+    print(new_brand_form.id)
+    print("aaa-Z", body['API_key'])
+    if body['API_key']['JE'] != "":
+        new_integration_form_JE= Integration(API_key=body['API_key']['JE'], brand_id=new_brand_form.id, platform_id=1)
+        db.session.add(new_integration_form_JE)
+    if body['API_key']['GL'] != "":
+        new_integration_form_GL= Integration(API_key=body['API_key']['GL'], brand_id=new_brand_form.id, platform_id=2)
+        db.session.add(new_integration_form_GL)
+    db.session.commit()
+    return jsonify(new_brand_form.serialize()), 200
+
 
 
 #METODOS PARA ENTERPRISE
