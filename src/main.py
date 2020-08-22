@@ -425,13 +425,15 @@ def edit_brand_form(id):
     update_brand =Brand.query.filter_by(id=body['id']).first_or_404()
     print("aaaaaa ->", update_brand.id)
     update_brand.name = body['name']
-    update_brand.logo = body['logo']
+    print("aqui el nombre ->", update_brand.name)
+    # update_brand.logo = body['logo']
     db.session.commit()
     print("aaa-Z", body['API_key'])
-    if body['API_key']['JE'] != "":
-        update_integration_form_JE= Integration(API_key=body['API_key']['JE'], brand_id=update_brand.id, platform_id=1)
-    if body['API_key']['GL'] != "":
-        update_integration_form_GL= Integration(API_key=body['API_key']['GL'], brand_id=update_brand.id, platform_id=2)
+    for integration in update_brand.integrations:
+        if body['API_key']['JE'] != "" and integration.platform_id==1:
+            integration.API_key = body['API_key']['JE']
+        if body['API_key']['GL'] != "" and integration.platform_id==2:
+            integration.API_key = body['API_key']['GL']
     db.session.commit()
     return jsonify(update_brand.serialize()), 200
 

@@ -24,12 +24,14 @@ class WrapperGlovo(Wrapper):
         for orderJson in json:
 
             lineitems = self.wrapLineItems(orderJson)
+            date = (orderJson['scheduleTime'])/1000
             total_price = (orderJson['orderPrice']['amount'])/100
             client = self.wrapClient(orderJson['addresses'])
             client.addToDbSession()
 
             order = Order(
                 total_price = total_price,
+                date = date,
                 lineItems = lineitems,
                 client = client,
                 platform_id = self.integration.platform_id,
@@ -38,6 +40,7 @@ class WrapperGlovo(Wrapper):
             )
 
             orders.append(order)
+            print("AAAAAAHHH ->", order)
         return orders
     
     def wrapLineItems(self,orderJson): #Para el producto más pedido

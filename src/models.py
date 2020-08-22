@@ -185,7 +185,8 @@ class Integration(db.Model,ModelMixin):
             "API_key": self.API_key,
             "brand_id": self.brand_id,
             "orders": list(map(lambda x: x.serialize(), self.orders)),
-            "platform_id": self.platform_id
+            "platform_id": self.platform_id,
+            "platform_name": self.platform.name
             # "deleted": self.deleted,
             # "relation_data": list(map(lambda x: x.serialize(), self.relation_data))
             # if not self.user.deleted else None
