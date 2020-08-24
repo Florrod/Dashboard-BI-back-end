@@ -1,6 +1,7 @@
 from utils import APIException
 from models import Order, LineItem, Clients, Brand, Platform, DatabaseManager 
 from typing import List
+from datetime import datetime
 
 class Wrapper():
 
@@ -24,7 +25,8 @@ class WrapperGlovo(Wrapper):
         for orderJson in json:
 
             lineitems = self.wrapLineItems(orderJson)
-            date = (orderJson['scheduleTime'])/1000
+            date=(orderJson['scheduleTime']) // 1000
+            # date = self.wrapDate(orderJson['scheduleTime'])
             total_price = (orderJson['orderPrice']['amount'])/100
             client = self.wrapClient(orderJson['addresses'])
             client.addToDbSession()
@@ -40,7 +42,7 @@ class WrapperGlovo(Wrapper):
             )
 
             orders.append(order)
-            print("AAAAAAHHH ->", order)
+            # print("AAAAAAHHH ->", order)
         return orders
     
     def wrapLineItems(self,orderJson): #Para el producto más pedido
@@ -54,6 +56,11 @@ class WrapperGlovo(Wrapper):
             quantity = orderJson['quantity'],
             price = (orderJson['orderPrice']['amount'] / orderJson['quantity'])/100
         )
+
+    # def wrapDate(self,orderJson):
+    #     timestamp= (orderJson['scheduleTime'])
+    #     date= datetime.fromtimestamp(timestamp)
+    #     return date
 
 
     def wrapClient(self,addressesJson) -> Clients: #Para el cliente recurrente y nuevo
@@ -83,11 +90,13 @@ class WrapperJustEat(Wrapper):
 
             lineitems = self.wrapLineItems(orderJson['Items'])
             total_price = orderJson['TotalPrice']
+            date=(orderJson['scheduleTime'])
             client = self.wrapClient(orderJson['Customer'])
             client.addToDbSession()
 
             order = Order(
                 total_price = total_price,
+                date = date,
                 lineItems = lineitems,
                 client = client,
                 platform_id = self.integration.platform_id,
