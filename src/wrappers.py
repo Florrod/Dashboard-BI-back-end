@@ -1,7 +1,8 @@
 from utils import APIException
 from models import Order, LineItem, Clients, Brand, Platform, DatabaseManager 
 from typing import List
-from datetime import datetime
+from datetime import timedelta, datetime, tzinfo, timezone
+import dateutil.parser
 
 class Wrapper():
 
@@ -25,8 +26,8 @@ class WrapperGlovo(Wrapper):
         for orderJson in json:
 
             lineitems = self.wrapLineItems(orderJson)
-            date=(orderJson['scheduleTime']) // 1000
-            # date = self.wrapDate(orderJson['scheduleTime'])
+            # date=(orderJson['scheduleTime']) // 1000
+            date = self.wrapDateGL(orderJson['scheduleTime'])
             total_price = (orderJson['orderPrice']['amount'])/100
             client = self.wrapClient(orderJson['addresses'])
             client.addToDbSession()
@@ -57,10 +58,11 @@ class WrapperGlovo(Wrapper):
             price = (orderJson['orderPrice']['amount'] / orderJson['quantity'])/100
         )
 
-    # def wrapDate(self,orderJson):
-    #     timestamp= (orderJson['scheduleTime'])
-    #     date= datetime.fromtimestamp(timestamp)
-    #     return date
+    def wrapDateGL(self,a):
+        timestamp= a
+        # date= datetime.utcfromtimestamp(int(timestamp))
+        date = datetime.fromtimestamp((timestamp)/1000, tz=timezone.utc)
+        return date
 
 
     def wrapClient(self,addressesJson) -> Clients: #Para el cliente recurrente y nuevo
@@ -90,7 +92,7 @@ class WrapperJustEat(Wrapper):
 
             lineitems = self.wrapLineItems(orderJson['Items'])
             total_price = orderJson['TotalPrice']
-            date=(orderJson['scheduleTime'])
+            date=self.wrapDateJE(orderJson['scheduleTime'])
             client = self.wrapClient(orderJson['Customer'])
             client.addToDbSession()
 
@@ -120,6 +122,13 @@ class WrapperJustEat(Wrapper):
             price = itemJson['UnitPrice'] 
         )
 
+    def wrapDateJE(self,b):
+        dates = b
+        date= dateutil.parser.parse(dates)
+        # date.strftime('%y-%M-%d %h:%m')
+        return date
+
+
     def wrapClient(self,customerJson) -> Clients: #Para el cliente recurrente y nuevo
 
         customer_id= customerJson['Id']
@@ -135,3 +144,4 @@ class WrapperJustEat(Wrapper):
             client.orders_count += 1
 
         return client
+    
