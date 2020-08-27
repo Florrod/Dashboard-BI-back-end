@@ -98,6 +98,7 @@ class WrapperJustEat(Wrapper):
 
             order = Order(
                 total_price = total_price,
+                # date = datetime.strptime(date, "%Y-%m-%d %H:%M:%S"),
                 date = date,
                 lineItems = lineitems,
                 client = client,

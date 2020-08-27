@@ -151,9 +151,10 @@ def sitemap():
 @jwt_required
 def get_top_products():
     platforms = Platform.all()
+    period = request.args.get("period")
     response = []
     for platform in platforms:
-        products = Product.top_products_for_platform(platform.id)
+        products = Product.top_products_for_platform(platform.id, period)
         response.append(
             {
                 "id": platform.id,
@@ -188,9 +189,10 @@ def get_recurrent_clients():
 @jwt_required
 def get_total_sales():
     platforms = Platform.all()
+    period = request.args.get("period") #esto representa una variable que nos envia el frontend como parámetro de búsqueda en la url(las_week, last_month o total)
     response = []
     for platform in platforms:
-        total_sales = Order.total_sales_for_platform(platform.id)
+        total_sales = Order.total_sales_for_platform(platform.id, period)
         print(total_sales)
         response.append(
             {

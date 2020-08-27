@@ -2,11 +2,13 @@ from flask_sqlalchemy import SQLAlchemy
 import requests
 
 from sqlalchemy.orm import relationship
-from sqlalchemy import Column, ForeignKey, Integer, String
+from sqlalchemy import Column, ForeignKey, Integer, String, and_
 from random import randint
 from flask_login import UserMixin
 from flask import jsonify
 from json.decoder import JSONDecodeError
+from datetime import datetime, timedelta
+from functools import reduce
 
 db = SQLAlchemy()
 
@@ -272,7 +274,7 @@ class Clients(db.Model, ModelMixin):
 
 class Order(db.Model, ModelMixin):
     id= db.Column(db.Integer, primary_key=True)
-    date = db.Column(db.String(250))
+    date = db.Column(db.DateTime())
     total_price = db.Column(db.Float)
     state = db.Column(db.String(250))
     platform_id = db.Column(db.Integer, db.ForeignKey('platform.id'), nullable=False)
@@ -295,7 +297,7 @@ class Order(db.Model, ModelMixin):
     def serialize(self):
         return {
             "id": self.id,
-            "date": self.date,
+            "date": self.date.strftime("%Y-%m-%d %H:%M:%S"),
             "total_price": self.total_price,
             "lineItems": list(map(lambda x: x.serialize(), self.lineItems)),
             "brand_id": self.brand_id
@@ -305,17 +307,30 @@ class Order(db.Model, ModelMixin):
         db.session.add(self)
 
     @staticmethod
-    def total_sales_for_platform(platform_id):
+    def total_sales_for_platform(platform_id, period):
         print ("Holaaaaa platform", platform_id)
         total_sales= 0
-        sales_result = db.session.query(
-            Order.platform_id,
-            db.func.sum(Order.total_price).label('total'))\
-        .filter(Order.platform_id == platform_id)\
-        .all()
-        print("TOTAL", sales_result)
+        days_ago = None
+        if period == "last_week":
+            days_ago = datetime.today() - timedelta(days = 7)
+        elif period == "last_month":
+            days_ago = datetime.today() - timedelta(days = 30)
+        else: 
+            days_ago = datetime.today() - timedelta(days = 2000)
+        orders = Order.query.filter_by(platform_id = platform_id).all()
+        filter_orders = list(filter(lambda order: order.date >= days_ago, orders)) #Para cada elemento de un arreglo le pregunta si esto existe y si es así lo agrega cada order
+        for order in filter_orders:
+            total_sales += order.total_price
+        return total_sales
 
-        return sales_result[0][1]
+        # sales_result = db.session.query(
+        #     Order.platform_id,
+        #     db.func.sum(Order.total_price).label('total'))\
+        # .filter(Order.platform_id == platform_id).filter(Order.date >= thirty_days_ago, Order.date <= seven_days_ago)\
+        # .all()
+        # print("TOTAL", sales_result)
+
+        # return sales_result[0][1]
 
          # rows= db.session.execute(
         #     f"select round(sum(`order`.total_price)) as total, `order`.platform_id from `order` where `order`.id = {platform_id};"
@@ -358,9 +373,16 @@ class Product():
         }
 
     @staticmethod
-    def top_products_for_platform(platform_id):
+    def top_products_for_platform(platform_id, period):
         products=[]
         quantity_products= 5
+        # days_ago = None
+        # if period == "last_week":
+        #     days_ago = datetime.today() - timedelta(days = 7)
+        # elif period == "last_month":
+        #     days_ago = datetime.today() - timedelta(days = 30)
+        # else: 
+        #     days_ago = datetime.today() - timedelta(days = 2000)
         rows= db.session.execute(
             f"select line_item.product_name from line_item, `order`,platform where `order`.platform_id = platform.id and line_item.order_id =`order`.id and `order`.platform_id = {platform_id} group by product_name order by sum(line_item.quantity) desc limit {quantity_products};"
         )
@@ -370,5 +392,6 @@ class Product():
             products.append(product)
             
         return products
+        
 
     

@@ -98,4 +98,6 @@ select clients.customer_id_platform, clients.orders_count,`order`.platform_id fr
 Para ventas totales por plataforma
 select round(sum(`order`.total_price)), `order`.platform_id from `order` group by `order`.platform_id;
 
+select line_item.product_name from line_item, `order`,platform where `order`.platform_id = platform.id and line_item.order_id =`order`.id and `order`.platform_id = 1 filter by `order`.date = 365 group by product_name order by sum(line_item.quantity) desc limit 5;
+
 
