@@ -2,7 +2,7 @@ from flask_sqlalchemy import SQLAlchemy
 import requests
 
 from sqlalchemy.orm import relationship
-from sqlalchemy import Column, ForeignKey, Integer, String, and_
+from sqlalchemy import Column, ForeignKey, Integer, String, and_, func
 from random import randint
 from flask_login import UserMixin
 from flask import jsonify
@@ -318,11 +318,57 @@ class Order(db.Model, ModelMixin):
         else: 
             days_ago = datetime.today() - timedelta(days = 2000)
         orders = Order.query.filter_by(platform_id = platform_id).all()
+        print("Laaaaa order ->", orders)
         filter_orders = list(filter(lambda order: order.date >= days_ago, orders)) #Para cada elemento de un arreglo le pregunta si esto existe y si es así lo agrega cada order
         for order in filter_orders:
             total_sales += order.total_price
         return total_sales
 
+    # @staticmethod
+    # def sales_graph(platform_id, period):
+    #     print ("Holaaaaa platform", platform_id)
+    #     total_sales= 0
+    #     days_ago = None
+    #     if period == "last_week":
+    #         days_ago = datetime.today().strftime("%A") - timedelta(days = 7)
+    #     elif period == "last_month":
+    #         days_ago = datetime.today().strftime("%A") - timedelta(days = 30)
+    #     else: 
+    #         days_ago = datetime.today().strftime("%B") - timedelta(days = 2000)
+    #     orders = Order.query.filter_by(platform_id = platform_id).filter_by(date = days_ago)\
+    #         .all()
+    #     print("Ohhhh orders con fecha ->", orders)
+    #     for order in orders:
+    #         total_sales += order.total_price
+    #     return total_sales
+
+    @staticmethod
+    def sales_report(platform_id, period):
+
+        days_ago = datetime.today() - timedelta(days = 2000)
+        orders = db.session.query(
+            Order.platform_id, 
+            db.func.day(Order.date),
+            db.func.month(Order.date),
+            db.func.year(Order.date),
+            db.func.sum(Order.total_price),
+        ).group_by(Order.platform_id,db.func.year(Order.date),db.func.month(Order.date),db.func.day(Order.date)).all()
+        print("hola, soy una prueba de venta mes a mes", orders)
+        return orders
+
+
+    @staticmethod
+    def sales_report_by_year(platform_id, period):
+        days_ago = datetime.today() - timedelta(days = 2000)
+        orders = db.session.query(
+            Order.platform_id, 
+            db.func.year(Order.date),
+            db.func.sum(Order.total_price),
+        ).filter(Order.platform_id == platform_id).group_by(db.func.year(Order.date),db.func.month(Order.date)).all()
+        print("hola, soy una prueba de venta acumulada", orders)
+        return orders
+
+        # .filter(Order.platform_id == platform_id).filter(Order.date >= days_ago)
         # sales_result = db.session.query(
         #     Order.platform_id,
         #     db.func.sum(Order.total_price).label('total'))\
@@ -393,5 +439,3 @@ class Product():
             
         return products
         
-
-    

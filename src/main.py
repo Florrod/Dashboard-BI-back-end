@@ -204,6 +204,36 @@ def get_total_sales():
         )
     return jsonify(response), 200
 
+# SALES GRAPH
+@app.route('/sales-graph', methods=['GET'])
+# @jwt_required
+def get_sales_graph():
+    platforms = Platform.all()
+    period = request.args.get("period") #esto representa una variable que nos envia el frontend como parámetro de búsqueda en la url(las_week, last_month o total)
+    response = []
+    for platform in platforms:
+        total_sales = Order.sales_report(platform.id, period)
+        print(total_sales)
+        response.append(
+            {
+                "id": platform.id,
+                "name": platform.name,
+                "total_price": total_sales
+                # "total_price": list(map(lambda total_sale: total_sale.serialize(), total_sales))
+            }
+        )
+    return jsonify(response), 200
+
+#PRUEBA SALES GRAPH
+@app.route('/test', methods=['GET'])
+# @jwt_required
+def get_test_sales():
+    total_sales = Order.sales_report(1, "month")
+
+    return jsonify(total_sales), 200
+
+
+
 #ENDPOINT AÑADIR EMPRESA
 @app.route('/add-enterprise', methods=['POST'])
 @jwt_required
