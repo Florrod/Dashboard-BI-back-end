@@ -151,15 +151,18 @@ def sitemap():
 @jwt_required
 def get_top_products():
     platforms = Platform.all()
-    period = request.args.get("period")
+    args = request.args.to_dict()
+    period = args["period"]
+    brand_id = args["brand"]
     response = []
     for platform in platforms:
-        products = Product.top_products_for_platform(platform.id, period)
+        products = Product.top_products_for_platform(platform.id, brand_id, period)
         response.append(
             {
                 "id": platform.id,
                 "name": platform.name,
-                "top_products": list(map(lambda product: product.serialize(), products))
+                "top_products": products
+                # "top_products": list(map(lambda product: product.serialize(), products))
             }
         )
     return jsonify(response), 200
@@ -190,9 +193,10 @@ def get_recurrent_clients():
 def get_total_sales():
     platforms = Platform.all()
     period = request.args.get("period") #esto representa una variable que nos envia el frontend como parámetro de búsqueda en la url(las_week, last_month o total)
+    brand_id = request.args.get("brand")
     response = []
     for platform in platforms:
-        total_sales = Order.total_sales_for_platform(platform.id, period)
+        total_sales = Order.total_sales_for_platform(platform.id, brand_id, period)
         print(total_sales)
         response.append(
             {

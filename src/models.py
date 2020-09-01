@@ -289,7 +289,14 @@ class Order(db.Model, ModelMixin):
 
     # def __init__(self, state='delivered' or 'canceled'): 
     #     self.state = state + '!'
-
+    def get_name_counts(self):
+        counts = {}
+        for item in self.lineItems:
+            if item.product_name in counts:
+                counts[item.product_name] += 1
+            else:
+                counts[item.product_name] = 1
+        return counts
 
     def __repr__(self):
         return '<Order %r>' % self.total_price
@@ -307,8 +314,8 @@ class Order(db.Model, ModelMixin):
         db.session.add(self)
 
     @staticmethod
-    def total_sales_for_platform(platform_id, period):
-        print ("Holaaaaa platform", platform_id)
+    def total_sales_for_platform(platform_id, brand_id, period):
+        # print ("Holaaaaa platform", platform_id)
         total_sales= 0
         days_ago = None
         if period == "last_week":
@@ -317,8 +324,8 @@ class Order(db.Model, ModelMixin):
             days_ago = datetime.today() - timedelta(days = 30)
         else: 
             days_ago = datetime.today() - timedelta(days = 2000)
-        orders = Order.query.filter_by(platform_id = platform_id).all()
-        print("Laaaaa order ->", orders)
+        orders = Order.query.filter_by(platform_id = platform_id, brand_id=brand_id).all()
+        # print("Laaaaa order ->", orders)
         filter_orders = list(filter(lambda order: order.date >= days_ago, orders)) #Para cada elemento de un arreglo le pregunta si esto existe y si es así lo agrega cada order
         for order in filter_orders:
             total_sales += order.total_price
@@ -419,9 +426,48 @@ class Product():
         }
 
     @staticmethod
-    def top_products_for_platform(platform_id, period):
+    def top_products_for_platform(platform_id, brand_id, period):
         products=[]
         quantity_products= 5
+        # period puede ser 'total', 'last_week', 'last_month'
+        days_ago = None
+        if period == "last_week":
+            days_ago = datetime.today() - timedelta(days = 7)
+        elif period == "last_month":
+            days_ago = datetime.today() - timedelta(days = 30)
+        else: 
+            days_ago = datetime.today() - timedelta(days = 2000)    
+        # ordenes de brand_id y platform_id entre fechas tales
+        brand_platform_orders = Order.query.filter_by(
+            platform_id=platform_id,
+            brand_id=brand_id
+        ).filter(Order.date >= days_ago).all()
+        print(f"ordenes para marca entre fechas por plataforma {len(brand_platform_orders)}")
+        # contar ocurrencias de nombres de producto en los lineitems de estas ordenes
+        # { "hamburguesa": 5, "papas fritas": 8, "caramelos": 10 ... }
+        counts = {}
+        for order in brand_platform_orders:
+            order_count = order.get_name_counts()
+            for product_name in order_count:
+                if product_name in counts:
+                    counts[product_name] += order_count[product_name]
+                else:
+                    counts[product_name] = 1
+
+        # construir lista con los objetos
+        count_object_list = []
+        for product_name in counts:
+            count_object_list.append({
+                "name": product_name,
+                "counts": counts[product_name]
+            })
+
+        # sort de esos objetos a partir del object.count 
+        count_object_list.sort(key=lambda count: count["counts"], reverse=True)
+        print(f"antes del return {len(count_object_list)} {count_object_list}")
+        # return top 5 [ { "name": caramelos, "count": 10 }, ... ]
+        return count_object_list[:5]
+
         # days_ago = None
         # if period == "last_week":
         #     days_ago = datetime.today() - timedelta(days = 7)
@@ -429,13 +475,14 @@ class Product():
         #     days_ago = datetime.today() - timedelta(days = 30)
         # else: 
         #     days_ago = datetime.today() - timedelta(days = 2000)
-        rows= db.session.execute(
-            f"select line_item.product_name from line_item, `order`,platform where `order`.platform_id = platform.id and line_item.order_id =`order`.id and `order`.platform_id = {platform_id} group by product_name order by sum(line_item.quantity) desc limit {quantity_products};"
-        )
-        for row in rows:
-            product_name = row["product_name"]
-            product = Product(name=product_name)
-            products.append(product)
+        # rows= db.session.execute(
+        #     # SELECT line_item.product_name FROM line_item 
+        #     f"select line_item.product_name from line_item, `order`,platform where `order`.platform_id = platform.id and line_item.order_id =`order`.id and `order`.platform_id = {platform_id} group by product_name order by sum(line_item.quantity) desc limit {quantity_products};"
+        # )
+        # for row in rows:
+        #     product_name = row["product_name"]
+        #     product = Product(name=product_name)
+        #     products.append(product)
             
-        return products
+        # return products
         
