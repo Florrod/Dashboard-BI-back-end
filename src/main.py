@@ -170,20 +170,23 @@ def get_top_products():
 #RECURRENT CLIENTS
 
 @app.route('/recurrent-clients', methods=['GET'])
-@jwt_required
+# @jwt_required
 def get_recurrent_clients():
     platforms = Platform.all()
+    args = request.args.to_dict()
+    period = args["period"]
+    brand_id = args["brand"]
     response = []
     for platform in platforms:
-        recurrent_clients = Clients.recurrent_clients_for_platform(platform.id)
-        response.append(
-            {
-                "id": platform.id,
-                "name": platform.name,
+        recurrent_clients = Clients.recurrent_clients_for_platform(platform.id, brand_id,period)
+        for rc in recurrent_clients:
+            response.append({
+                "platform_name": platform.name,
+                "client_phone": rc[0],
+                "client_identifier": rc[1],
                 #Meter en orders_count el array de recurrent_clients parece raro, orders count pide un entero y recurrent_clientes parece un array
-                "orders_count": list(map(lambda recurrent_client: recurrent_client.serialize(), recurrent_clients))
-            }
-        )
+                "orders_qty": rc[2]
+            })
     return jsonify(response), 200
 
 # TOTAL SALES

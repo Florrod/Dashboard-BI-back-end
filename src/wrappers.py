@@ -75,6 +75,7 @@ class WrapperGlovo(Wrapper):
                 if client == None:
                     client = Clients(
                         phone = phone,
+                        customer_id_platform = phone,
                         orders_count = 1
                     )
 

@@ -3,6 +3,7 @@ import requests
 
 from sqlalchemy.orm import relationship
 from sqlalchemy import Column, ForeignKey, Integer, String, and_, func
+from sqlalchemy.sql import text
 from random import randint
 from flask_login import UserMixin
 from flask import jsonify
@@ -254,22 +255,49 @@ class Clients(db.Model, ModelMixin):
     def getWithCustomerPlatformId(cls, customer_platform_id):
         return db.session.query(cls).filter_by(customer_id_platform=customer_platform_id).one_or_none()
 
-    @staticmethod
-    def recurrent_clients_for_platform(platform_id):
-        recurrent_clients=[]
-        quantity_clients= 1
-        rows= db.session.execute(
-            f"select clients.orders_count, clients.phone, clients.customer_id_platform from clients,`order`, platform where `order`.platform_id = platform.id and `order`.platform_id = {platform_id} and `order`.client_id = clients.id order by clients.orders_count desc limit {quantity_clients};"
-        )
+    # @staticmethod
+    # def recurrent_clients_for_platform(platform_id):
+    #     recurrent_clients=[]
+    #     quantity_clients= 1
+    #     rows= db.session.execute(
+    #         f"select clients.orders_count, clients.phone, clients.customer_id_platform from clients,`order`, platform where `order`.platform_id = platform.id and `order`.platform_id = {platform_id} and `order`.client_id = clients.id order by clients.orders_count desc limit {quantity_clients};"
+    #     )
         
-        for row in rows:
-            phone= row["phone"]
-            customer_id_platform= row["customer_id_platform"]
-            orders_count = row["orders_count"]
-            #Estamos creando un cliente pocho, deberiamos como minimo hacer que sea obligatorio al crear un cliente que tenga un identificador único como puede ser un email o un telefono.
-            recurrent_client = Clients(orders_count=orders_count, phone=phone, customer_id_platform=customer_id_platform)
-            recurrent_clients.append(recurrent_client)
+    #     for row in rows:
+    #         phone= row["phone"]
+    #         customer_id_platform= row["customer_id_platform"]
+    #         orders_count = row["orders_count"]
+    #         #Estamos creando un cliente pocho, deberiamos como minimo hacer que sea obligatorio al crear un cliente que tenga un identificador único como puede ser un email o un telefono.
+    #         recurrent_client = Clients(orders_count=orders_count, phone=phone, customer_id_platform=customer_id_platform)
+    #         recurrent_clients.append(recurrent_client)
             
+    #     return recurrent_clients
+
+    @staticmethod
+    def recurrent_clients_for_platform(platform_id, brand_id, period):
+        days_ago = None
+        if period == "last_week":
+            days_ago = datetime.today() - timedelta(days = 7)
+        elif period == "last_month":
+            days_ago = datetime.today() - timedelta(days = 30)
+        else: 
+            days_ago = datetime.today() - timedelta(days = 2000)
+
+        recurrent_clients = db.session.query(
+            Clients.phone,
+            Clients.customer_id_platform,
+            db.func.count(Order.id).label("orders_qty"),
+        ).join(Clients, Order.client_id == Clients.id
+        ).group_by(
+            Order.client_id
+        ).filter(Order.platform_id == platform_id, Order.brand_id == brand_id
+        ).filter(Order.date >= days_ago
+        ).order_by(text("orders_qty desc")
+        ).limit(1
+        ).all()
+    
+        print("hola soy recurrent clients", recurrent_clients)
+
         return recurrent_clients
 
 class Order(db.Model, ModelMixin):
