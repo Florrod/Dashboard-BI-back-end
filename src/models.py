@@ -378,16 +378,18 @@ class Order(db.Model, ModelMixin):
     #     return total_sales
 
     @staticmethod
-    def sales_report(platform_id, period):
+    def sales_report(brand_id):
 
         days_ago = datetime.today() - timedelta(days = 2000)
         orders = db.session.query(
             Order.platform_id, 
+            Order.brand_id,
             db.func.day(Order.date),
             db.func.month(Order.date),
             db.func.year(Order.date),
             db.func.sum(Order.total_price),
-        ).group_by(Order.platform_id,db.func.year(Order.date),db.func.month(Order.date),db.func.day(Order.date)).all()
+        ).filter(Order.brand_id == brand_id
+        ).group_by(Order.platform_id, Order.brand_id, db.func.year(Order.date),db.func.month(Order.date),db.func.day(Order.date)).all()
         print("hola, soy una prueba de venta mes a mes", orders)
         return orders
 

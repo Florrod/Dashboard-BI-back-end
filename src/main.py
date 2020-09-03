@@ -181,6 +181,7 @@ def get_recurrent_clients():
         recurrent_clients = Clients.recurrent_clients_for_platform(platform.id, brand_id,period)
         for rc in recurrent_clients:
             response.append({
+                "platform_id": platform.id,
                 "platform_name": platform.name,
                 "client_phone": rc[0],
                 "client_identifier": rc[1],
@@ -234,8 +235,13 @@ def get_sales_graph():
 #PRUEBA SALES GRAPH
 @app.route('/test', methods=['GET'])
 # @jwt_required
+
 def get_test_sales():
-    total_sales = Order.sales_report(1, "month")
+    args = request.args.to_dict()
+    # period = args["period"]
+    # platform_id = args["platform"]
+    brand_id = args["brand"]
+    total_sales = Order.sales_report(brand_id)
 
     return jsonify(total_sales), 200
 
