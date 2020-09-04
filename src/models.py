@@ -384,10 +384,12 @@ class Order(db.Model, ModelMixin):
         orders = db.session.query(
             Order.platform_id, 
             Order.brand_id,
+            Platform.name,
             db.func.day(Order.date),
             db.func.month(Order.date),
             db.func.year(Order.date),
             db.func.sum(Order.total_price),
+        ).join(Platform, Order.platform_id == Platform.id
         ).filter(Order.brand_id == brand_id
         ).group_by(Order.platform_id, Order.brand_id, db.func.year(Order.date),db.func.month(Order.date),db.func.day(Order.date)).all()
         print("hola, soy una prueba de venta mes a mes", orders)
