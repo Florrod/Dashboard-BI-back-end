@@ -170,7 +170,7 @@ def get_top_products():
 #RECURRENT CLIENTS
 
 @app.route('/recurrent-clients', methods=['GET'])
-# @jwt_required
+@jwt_required
 def get_recurrent_clients():
     platforms = Platform.all()
     args = request.args.to_dict()
@@ -234,7 +234,7 @@ def get_total_sales():
 
 #PRUEBA SALES GRAPH
 @app.route('/test', methods=['GET'])
-# @jwt_required
+@jwt_required
 
 def get_test_sales():
     args = request.args.to_dict()
@@ -286,6 +286,8 @@ def add_new_brand_form():
     db.session.commit()
     print(new_brand_form.id)
     print("aaa-Z", body['API_key'])
+    if 'name' not in body:
+        return 'Por favor especifica un nombre para la marca',400
     if body['API_key']['JE'] != "":
         new_integration_form_JE= Integration(API_key=body['API_key']['JE'], brand_id=new_brand_form.id, platform_id=1)
         db.session.add(new_integration_form_JE)
