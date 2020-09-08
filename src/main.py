@@ -26,6 +26,7 @@ app.url_map.strict_slashes = False
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DB_CONNECTION_STRING')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 init_database()
+# app.config[JWT_ACCESS_TOKEN_EXPIRES] = 
 login_manager = LoginManager()
 login_manager.init_app(app)
 MIGRATE = Migrate(app, db)
@@ -281,7 +282,7 @@ def add_new_brand_form():
     db.session.add(current_enterprise_logged)
     db.session.commit()
     print("aaaaaa ->", current_enterprise_logged.id)
-    new_brand_form = Brand(name=body['name'], logo=body['logo'], enterprise_id= current_enterprise_logged.id)
+    new_brand_form = Brand(name=body['name'], enterprise_id= body['enterprise_id'])
     db.session.add(new_brand_form)
     db.session.commit()
     print(new_brand_form.id)
